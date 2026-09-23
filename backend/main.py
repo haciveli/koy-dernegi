@@ -149,6 +149,9 @@ def dosya_yukle(dosya: UploadFile = File(...), _: models.Kullanici = Depends(gun
 
 @app.get("/")
 def ana():
+    frontend_klasor = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+    if os.path.isdir(frontend_klasor) and os.path.isfile(os.path.join(frontend_klasor, "index.html")):
+        return FileResponse(os.path.join(frontend_klasor, "index.html"))
     return {"mesaj": "Köy Derneği Web Portalı API'ye hoş geldiniz"}
 
 
