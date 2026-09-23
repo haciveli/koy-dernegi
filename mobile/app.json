@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Köy Derneği",
+    "slug": "koy-dernegi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.koyumegonul.dernek"
+    },
+    "android": {
+      "package": "org.koyumegonul.dernek",
+      "adaptiveIcon": {
+        "backgroundColor": "#2f6149",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "extra": {
+      "apiUrl": "http://192.168.1.104:8000",
+      "eas": {
+        "projectId": "cc62f7a4-5827-4b8e-be96-c3549b9dec92"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "owner": "adem_ce",
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2f6149",
+          "defaultChannel": "genel"
+        }
+      ]
+    ]
+  }
+}

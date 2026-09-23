@@ -1,0 +1,17 @@
+# Veri (gizli + lokal)
+backend/*.db
+backend/uploads/
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Node / Expo
+node_modules/
+mobile/node_modules/
+mobile/.expo/
+*.apk
+
+# Sistem
+.DS_Store

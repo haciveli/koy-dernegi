@@ -1,0 +1,15 @@
+# Render Blueprint — Köy Derneği test ortamı (ÜCRETSİZ plan)
+# Kullanım: render.com dashboard > New > Blueprint > bu repo'yu bağla
+# Kaynak: deploy/render.yaml — rootDir backend olarak ayarlıdır.
+services:
+  - type: web
+    name: koy-dernegi-test
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python seed.py && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/ayarlar
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9

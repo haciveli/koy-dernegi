@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Varsayılan tema: Orman Yeşili + altın vurgu */
+  --koy-50: #f2f7f4;
+  --koy-100: #dcebe1;
+  --koy-200: #bcd7c6;
+  --koy-300: #91b9a2;
+  --koy-400: #63977c;
+  --koy-500: #427a5f;
+  --koy-600: #2f6149;
+  --koy-700: #27503d;
+  --koy-800: #214233;
+  --koy-900: #1c372b;
+  --koy-950: #0f231b;
+  --vurgu-50: #fdf8ee;
+  --vurgu-100: #f9edcf;
+  --vurgu-200: #f2d99c;
+  --vurgu-300: #e8bf63;
+  --vurgu-400: #dda63c;
+  --vurgu-500: #c98a24;
+  --vurgu-600: #a86a1b;
+  --vurgu-700: #854e19;
+  --vurgu-800: #6e3f1b;
+  --vurgu-900: #5e361a;
+  --golge-renk: 47 97 73;
+  --font-govde: "Inter", system-ui, sans-serif;
+  --font-baslik: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-stone-50 text-slate-700 antialiased;
+    font-family: var(--font-govde);
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    @apply text-slate-900;
+    font-family: var(--font-baslik);
+    letter-spacing: -0.025em;
+  }
+  ::selection {
+    background-color: var(--koy-600);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background-color: var(--koy-600);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 12px 32px -10px rgb(var(--golge-renk) / 0.55);
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover {
+    background-color: var(--koy-700);
+    transform: translateY(-0.125rem);
+  }
+  .btn-primary:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .btn-primary:focus-visible {
+    box-shadow: 0 12px 32px -10px rgb(var(--golge-renk) / 0.55), 0 0 0 2px var(--koy-500);
+  }
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-primary:disabled:hover {
+    transform: none;
+  }
+
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background-color: var(--vurgu-500);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px -6px rgba(16, 24, 40, 0.10);
+    transition: all 0.2s ease;
+  }
+  .btn-accent:hover {
+    background-color: var(--vurgu-600);
+    transform: translateY(-0.125rem);
+  }
+  .btn-accent:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .btn-accent:focus-visible {
+    box-shadow: 0 0 0 2px var(--vurgu-400);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--koy-200);
+    border-radius: 0.75rem;
+    background-color: rgb(255 255 255 / 0.6);
+    color: var(--koy-700);
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  .btn-outline:hover {
+    background-color: var(--koy-50);
+    border-color: var(--koy-300);
+  }
+  .btn-outline:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .btn-outline:focus-visible {
+    box-shadow: 0 0 0 2px var(--koy-500);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    background-color: #fff;
+    color: #1e293b;
+    transition: all 0.15s ease;
+  }
+  .input-field::placeholder {
+    color: #94a3b8;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: var(--koy-500);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--koy-500) 15%, transparent);
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 1rem;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px -6px rgba(16, 24, 40, 0.10);
+    transition: box-shadow 0.3s ease;
+  }
+  .card:hover {
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px -12px rgba(16, 24, 40, 0.16);
+  }
+
+  .card-lift {
+    background-color: #fff;
+    border-radius: 1rem;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px -6px rgba(16, 24, 40, 0.10);
+    transition: all 0.3s ease;
+  }
+  .card-lift:hover {
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px -12px rgba(16, 24, 40, 0.16);
+    transform: translateY(-0.25rem);
+  }
+
+  .section-title {
+    font-family: var(--font-baslik);
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+  }
+  @media (min-width: 768px) {
+    .section-title {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--koy-600);
+  }
+}
+
+/* ---- Temaya bağlı Tailwind sınıflarını CSS değişkenleriyle geçersiz kılma ----
+   Bu kurallar katman dışındadır, bu yüzden Tailwind'in ürettiği sabit renkli
+   kurallardan üstündür. Böylece panelden seçilen palet site genelinde uygulanır. */
+
+.bg-koy-50 { background-color: var(--koy-50); }
+.bg-koy-100 { background-color: var(--koy-100); }
+.bg-koy-200 { background-color: var(--koy-200); }
+.bg-koy-500\/25 { background-color: color-mix(in srgb, var(--koy-500) 25%, transparent); }
+.bg-koy-500\/30 { background-color: color-mix(in srgb, var(--koy-500) 30%, transparent); }
+.bg-koy-600 { background-color: var(--koy-600); }
+.bg-koy-700 { background-color: var(--koy-700); }
+.bg-koy-900 { background-color: var(--koy-900); }
+.bg-koy-900\/95 { background-color: color-mix(in srgb, var(--koy-900) 95%, transparent); }
+.bg-koy-950 { background-color: var(--koy-950); }
+.hover\:bg-koy-50:hover { background-color: var(--koy-50); }
+.hover\:bg-koy-100:hover { background-color: var(--koy-100); }
+.group:hover .group-hover\:bg-koy-600 { background-color: var(--koy-600); }
+.bg-vurgu-500\/15 { background-color: color-mix(in srgb, var(--vurgu-500) 15%, transparent); }
+.hover\:bg-vurgu-50:hover { background-color: var(--vurgu-50); }
+.bg-amber-100 { background-color: var(--vurgu-100); }
+.bg-amber-500 { background-color: var(--vurgu-500); }
+.hover\:bg-amber-50:hover { background-color: var(--vurgu-50); }
+
+.border-koy-200 { border-color: var(--koy-200); }
+.border-koy-500 { border-color: var(--koy-500); }
+.border-koy-600 { border-color: var(--koy-600); }
+
+.text-koy-100 { color: var(--koy-100); }
+.text-koy-100\/40 { color: color-mix(in srgb, var(--koy-100) 40%, transparent); }
+.text-koy-100\/70 { color: color-mix(in srgb, var(--koy-100) 70%, transparent); }
+.text-koy-100\/80 { color: color-mix(in srgb, var(--koy-100) 80%, transparent); }
+.text-koy-200 { color: var(--koy-200); }
+.text-koy-200\/60 { color: color-mix(in srgb, var(--koy-200) 60%, transparent); }
+.text-koy-200\/70 { color: color-mix(in srgb, var(--koy-200) 70%, transparent); }
+.text-koy-300 { color: var(--koy-300); }
+.text-koy-500 { color: var(--koy-500); }
+.text-koy-600 { color: var(--koy-600); }
+.text-koy-700 { color: var(--koy-700); }
+.text-koy-800 { color: var(--koy-800); }
+.hover\:text-koy-800:hover { color: var(--koy-800); }
+.text-amber-600 { color: var(--vurgu-600); }
+.text-amber-700 { color: var(--vurgu-700); }
+.text-amber-800 { color: var(--vurgu-800); }
+
+.focus\:border-koy-500:focus { border-color: var(--koy-500); }
+.focus\:ring-koy-500\/15:focus { --tw-ring-color: color-mix(in srgb, var(--koy-500) 15%, transparent); }
+.focus\:ring-koy-500:focus { --tw-ring-color: var(--koy-500); }
+.ring-koy-500 { --tw-ring-color: var(--koy-500); }
+
+.from-koy-400 {
+  --tw-gradient-from: var(--koy-400);
+  --tw-gradient-to: transparent;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.from-koy-700 {
+  --tw-gradient-from: var(--koy-700);
+  --tw-gradient-to: transparent;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.to-koy-600 { --tw-gradient-to: var(--koy-600); }
+.to-koy-900 { --tw-gradient-to: var(--koy-900); }
+
+.shadow-glow {
+  box-shadow: 0 12px 32px -10px rgb(var(--golge-renk) / 0.55);
+}
+
+.font-display {
+  font-family: var(--font-baslik);
+}
