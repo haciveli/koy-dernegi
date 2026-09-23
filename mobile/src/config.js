@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 // Backend adresi: app.json -> extra.apiUrl içinden okunur.
 // Fiziksel cihazda test ederken burayı bilgisayarınızın LAN adresiyle değiştirin,
 // örneğin: http://192.168.1.10:8000
-const API_URL = Constants.expoConfig?.extra?.apiUrl || "http://192.168.1.104:8000";
+const API_URL = Constants.expoConfig?.extra?.apiUrl || "https://koy-dernegi-test.onrender.com";
 
 export { API_URL };
 
