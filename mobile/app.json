@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "org.koyumegonul.dernek",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#2f6149",
         "foregroundImage": "./assets/android-icon-foreground.png",

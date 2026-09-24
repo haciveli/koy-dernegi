@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "12393734265",
+    "project_id": "dernek-apk",
+    "storage_bucket": "dernek-apk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12393734265:android:3b9a27332c9a5f8f1b74a8",
+        "android_client_info": {
+          "package_name": "org.koyumegonul.dernek"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0j-iNVdWfvNmoVuNsLcaW5q5Bw0HM-EM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
