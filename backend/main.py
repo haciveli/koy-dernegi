@@ -1089,23 +1089,6 @@ def aidat_sil(
     db.commit()
 
 
-@app.post("/api/aidatlar/{aidat_id}/ode", response_model=schemas.AidatResponse)
-def aidat_ode(
-    aidat_id: int,
-    kullanici: models.Kullanici = Depends(guncel_kullanici),
-    db: Session = Depends(get_db),
-):
-    aidat = db.query(models.Aidat).filter(models.Aidat.id == aidat_id).first()
-    if aidat is None or aidat.kullanici_id != kullanici.id:
-        raise HTTPException(status_code=404, detail="Aidat kaydı bulunamadı")
-    if aidat.durum == "odendi":
-        raise HTTPException(status_code=400, detail="Bu aidat zaten ödenmiş")
-    aidat.durum = "odeyenekadar"
-    db.commit()
-    db.refresh(aidat)
-    return aidat_yanit(aidat)
-
-
 @app.post("/api/aidatlar/benim/ode", response_model=schemas.AidatResponse)
 def aidat_benim_ode(
     kullanici: models.Kullanici = Depends(guncel_kullanici),
@@ -1135,6 +1118,23 @@ def aidat_benim_ode(
     db.commit()
     db.refresh(kayit)
     return aidat_yanit(kayit)
+
+
+@app.post("/api/aidatlar/{aidat_id}/ode", response_model=schemas.AidatResponse)
+def aidat_ode(
+    aidat_id: int,
+    kullanici: models.Kullanici = Depends(guncel_kullanici),
+    db: Session = Depends(get_db),
+):
+    aidat = db.query(models.Aidat).filter(models.Aidat.id == aidat_id).first()
+    if aidat is None or aidat.kullanici_id != kullanici.id:
+        raise HTTPException(status_code=404, detail="Aidat kaydı bulunamadı")
+    if aidat.durum == "odendi":
+        raise HTTPException(status_code=400, detail="Bu aidat zaten ödenmiş")
+    aidat.durum = "odeyenekadar"
+    db.commit()
+    db.refresh(aidat)
+    return aidat_yanit(aidat)
 
 
 @app.get("/api/bagislar", response_model=List[schemas.BagisResponse])
