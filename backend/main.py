@@ -379,6 +379,50 @@ def cihaz_kaldir(
     return None
 
 
+@app.get("/api/debug/cihazlar")
+def debug_cihazlar(_: models.Kullanici = Depends(guncel_yonetici), db: Session = Depends(get_db)):
+    cihazlar = db.query(models.Cihaz).all()
+    return {
+        "adet": len(cihazlar),
+        "cihazlar": [
+            {
+                "id": c.id,
+                "kullanici_id": c.kullanici_id,
+                "token": c.expo_token[:40] + "..." if c.expo_token else None,
+                "platform": c.platform,
+            }
+            for c in cihazlar
+        ],
+    }
+
+
+@app.post("/api/debug/bildirim-test")
+def debug_bildirim_test(
+    baslik: str = "Test Bildirimi", mesaj: str = "Bildirim kanali testi",
+    _: models.Kullanici = Depends(guncel_yonetici), db: Session = Depends(get_db),
+):
+    cihazlar = db.query(models.Cihaz).all()
+    tokenler = [c.expo_token for c in cihazlar if c.expo_token]
+    if not tokenler:
+        return {"durum": "cihaz-yok", "mesaj": "Kayitli cihaz/token bulunamadi"}
+    govde = json.dumps(
+        [{"to": t, "title": baslik, "body": mesaj, "sound": "default"} for t in tokenler],
+        ensure_ascii=False,
+    ).encode("utf-8")
+    ist = url_istek.Request(
+        "https://exp.host/--/api/v2/push/send",
+        data=govde,
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        method="POST",
+    )
+    try:
+        yanit = url_istek.urlopen(ist, timeout=15)
+        govde_yanit = yanit.read().decode("utf-8", "replace")
+        return {"durum": "gonderildi", "token_adet": len(tokenler), "expo_yanit": govde_yanit}
+    except Exception as e:
+        return {"durum": "hata", "hata": str(e)}
+
+
 @app.get("/api/kullanicilar", response_model=List[schemas.KullaniciResponse])
 def kullanicilar_liste(_: models.Kullanici = Depends(guncel_yonetici), db: Session = Depends(get_db)):
     return db.query(models.Kullanici).all()
