@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text, or_, and_
 from typing import List
 import os, uuid, shutil, json, time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from urllib import request as url_istek
 import models, schemas, security
 from database import SessionLocal, engine, Base
@@ -1104,6 +1104,37 @@ def aidat_ode(
     db.commit()
     db.refresh(aidat)
     return aidat_yanit(aidat)
+
+
+@app.post("/api/aidatlar/benim/ode", response_model=schemas.AidatResponse)
+def aidat_benim_ode(
+    kullanici: models.Kullanici = Depends(guncel_kullanici),
+    db: Session = Depends(get_db),
+):
+    yil = date.today().year
+    kayit = (
+        db.query(models.Aidat)
+        .filter(models.Aidat.kullanici_id == kullanici.id, models.Aidat.yil == yil)
+        .first()
+    )
+    if kayit is None:
+        ayarlar = {a.anahtar: a.deger for a in db.query(models.SiteAyar).all()}
+        tutar = float(ayarlar.get("aidat_yillik_tutar") or varsayilan_ayarlar.VARSAYILAN_AYARLAR.get("aidat_yillik_tutar", 0) or 0)
+        kayit = models.Aidat(
+            kullanici_id=kullanici.id,
+            yil=yil,
+            tutar=tutar,
+            durum="beklemede",
+        )
+        db.add(kayit)
+        db.commit()
+        db.refresh(kayit)
+    if kayit.durum == "odendi":
+        raise HTTPException(status_code=400, detail="Bu yılın aidatı zaten ödenmiş")
+    kayit.durum = "odeyenekadar"
+    db.commit()
+    db.refresh(kayit)
+    return aidat_yanit(kayit)
 
 
 @app.get("/api/bagislar", response_model=List[schemas.BagisResponse])

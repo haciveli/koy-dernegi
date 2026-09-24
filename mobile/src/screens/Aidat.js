@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { aidatlarBenim, aidatOde, ayarlar, bagisEkle, bagislarBenim } from "../api";
+import { aidatlarBenim, aidatBenimOde, aidatOde, ayarlar, bagisEkle, bagislarBenim } from "../api";
 import { useAuth } from "../context/AuthContext";
 import PageHeader from "../components/PageHeader";
 import Button from "../components/Button";
@@ -79,6 +79,9 @@ export default function Aidat({ navigation }) {
     }
   };
 
+  const buYil = typeof new Date().getFullYear === "function" ? new Date().getFullYear() : 2026;
+  const buYilKaydi = (aidatListe || []).find((a) => a.yil == buYil);
+
   const odemeBildir = (aidat) => {
     const tutar = odenecekTutar(aidat);
     Alert.alert(
@@ -91,6 +94,29 @@ export default function Aidat({ navigation }) {
           onPress: async () => {
             try {
               await aidatOde(aidat.id);
+              await cek();
+              Alert.alert("Bildirim Alındı", "Yönetici onayı bekleniyor.");
+            } catch (hata) {
+              Alert.alert("Hata", hata?.message || "İşlem başarısız.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const yillikAidatBildir = () => {
+    const tutar = Number(ayar?.aidat_yillik_tutar || 0);
+    Alert.alert(
+      "Yıllık Aidat Bildirimi",
+      `${buYil} yılı aidatı için ${tutar || "-"} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Ödedim",
+          onPress: async () => {
+            try {
+              await aidatBenimOde();
               await cek();
               Alert.alert("Bildirim Alındı", "Yönetici onayı bekleniyor.");
             } catch (hata) {
@@ -152,6 +178,19 @@ export default function Aidat({ navigation }) {
                   </TouchableOpacity>
                 </View>
                 {ayar?.aidat_aciklama ? <Text style={styles.ibanNot}>{ayar.aidat_aciklama}</Text> : null}
+              </View>
+            ) : null}
+
+            {!buYilKaydi ? (
+              <View style={styles.yillikKart}>
+                <View style={styles.yillikUst}>
+                  <Text style={styles.yillikYil}>{buYil}</Text>
+                  <Text style={styles.yillikTutar}>{ayar?.aidat_yillik_tutar || "-"} ₺ / yıl</Text>
+                </View>
+                <Text style={styles.yillikNot}>
+                  Bu yılın aidat kaydı henüz girilmedi. Yine de ödemenizi bildirebilirsiniz.
+                </Text>
+                <Button baslik="Yıllık Aidatımı Bildirdim" ikon="checkmark-circle-outline" onPress={yillikAidatBildir} />
               </View>
             ) : null}
 
@@ -329,4 +368,16 @@ const styles = StyleSheet.create({
   },
   bagisUst: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   bagisTutar: { fontSize: 17, fontWeight: "700", color: renkler.metin },
+  yillikKart: {
+    backgroundColor: renkler.ana_50,
+    borderRadius: olcutler.kart_radius,
+    borderWidth: 1,
+    borderColor: renkler.ana_200,
+    padding: 16,
+    gap: 10,
+  },
+  yillikUst: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  yillikYil: { fontSize: 22, fontWeight: "800", color: renkler.ana_600 },
+  yillikTutar: { fontSize: 15, fontWeight: "700", color: renkler.metin },
+  yillikNot: { fontSize: 13, color: renkler.metin_soluk },
 });

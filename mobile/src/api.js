@@ -186,6 +186,8 @@ export const aidatSil = (id) =>
   istekYolla(`/api/aidatlar/${id}`, { method: "DELETE" });
 export const aidatOde = (id) =>
   istekYolla(`/api/aidatlar/${id}/ode`, { method: "POST" });
+export const aidatBenimOde = () =>
+  istekYolla("/api/aidatlar/benim/ode", { method: "POST" });
 
 // Bağışlar
 export const bagislar = () => istekYolla("/api/bagislar");

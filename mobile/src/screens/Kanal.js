@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { chatMesajlar, chatMesajGonder } from "../api";
 import { mesajSaati } from "../utils";
 import { useAuth } from "../context/AuthContext";
@@ -22,6 +23,7 @@ const YENILEME_ARALIGI = 4000;
 export default function Kanal({ route }) {
   const { aliciId, baslik } = route.params || {};
   const { kullanici } = useAuth();
+  const iç = useSafeAreaInsets();
   const [mesajlar, setMesajlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [metin, setMetin] = useState("");
@@ -112,7 +114,7 @@ export default function Kanal({ route }) {
         />
       )}
 
-      <View style={styles.girdiKuşak}>
+      <View style={[styles.girdiKuşak, { paddingBottom: Math.max(iç.bottom, 12) }]}>
         <TextInput
           style={styles.girdi}
           placeholder="Mesajınızı yazın..."
