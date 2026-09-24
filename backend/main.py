@@ -277,7 +277,7 @@ def _expo_push_gonder(token_listesi: List[str], baslik: str, mesaj: str, veri: d
 
 
 # Bildirim türleri: kullanıcılar bu türler için tercihlerini açıp kapatabilir.
-BILDIRIM_TURLERI = ["duyuru", "etkinlik", "toplanti", "oylama", "aidat", "bagis"]
+BILDIRIM_TURLERI = ["duyuru", "etkinlik", "toplanti", "oylama", "aidat", "bagis", "mesaj"]
 
 
 def _tercih_kapali_kullanicilar(db: Session, tur: str):
@@ -289,10 +289,12 @@ def _tercih_kapali_kullanicilar(db: Session, tur: str):
     return {k[0] for k in kapali_ids}
 
 
-def bildirim_gonder(db: Session, baslik: str, mesaj: str, kullanici_id: int = None, veri: dict = None, tur: str = None):
+def bildirim_gonder(db: Session, baslik: str, mesaj: str, kullanici_id: int = None, veri: dict = None, tur: str = None, gonderen_haric_id: int = None):
     sorgu = db.query(models.Cihaz.expo_token)
     if kullanici_id is not None:
         sorgu = sorgu.filter(models.Cihaz.kullanici_id == kullanici_id)
+    if gonderen_haric_id is not None:
+        sorgu = sorgu.filter(models.Cihaz.kullanici_id != gonderen_haric_id)
     if tur in BILDIRIM_TURLERI:
         kapali = _tercih_kapali_kullanicilar(db, tur)
         if kapali:
@@ -927,6 +929,25 @@ def chat_mesaj_gonder(
     db.add(mesaj)
     db.commit()
     db.refresh(mesaj)
+    gonderen_ad = f"{kullanici.ad} {kullanici.soyad}"
+    if veri.alici_id is not None:
+        bildirim_gonder(
+            db,
+            f"Yeni mesaj: {gonderen_ad}",
+            icerik[:120],
+            kullanici_id=veri.alici_id,
+            veri={"tip": "sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad},
+            tur="mesaj",
+        )
+    else:
+        bildirim_gonder(
+            db,
+            f"Genel Sohbet: {gonderen_ad}",
+            icerik[:120],
+            gonderen_haric_id=kullanici.id,
+            veri={"tip": "sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad},
+            tur="mesaj",
+        )
     return mesaj_tamami(db, mesaj)
 
 

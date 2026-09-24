@@ -16,6 +16,7 @@ const BILDIRIM_TURLERI = [
   { anahtar: "oylama", etiket: "Oylamalar", aciklama: "Yeni oylama başlatıldığında" },
   { anahtar: "aidat", etiket: "Aidat", aciklama: "Aidat ödemenizle ilgili" },
   { anahtar: "bagis", etiket: "Bağış", aciklama: "Bağışınızla ilgili" },
+  { anahtar: "mesaj", etiket: "Sohbet", aciklama: "Size mesaj geldiğinde" },
 ];
 
 export default function Profil({ navigation }) {
