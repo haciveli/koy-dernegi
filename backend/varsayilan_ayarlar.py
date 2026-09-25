@@ -34,6 +34,7 @@ VARSAYILAN_AYARLAR = {
 
     # Aidat ve Bağış
     "aidat_aylik_tutar": "500",
+    "aidat_yillik_tutar": "6000",
     "aidat_iban": "TR45 0000 0000 0000 0000 0000 00",
     "aidat_banka": "Ziraat Bankası",
     "aidat_alici": "Köyüme Gönül Derneği",

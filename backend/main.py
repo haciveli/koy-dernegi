@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import text, or_, and_
+from sqlalchemy import text, or_, and_, case
 from typing import List
 import os, uuid, shutil, json, time
 from datetime import date, datetime, timedelta
@@ -1021,14 +1021,17 @@ def aidat_yanit(aidat: models.Aidat) -> dict:
     }
 
 
+_yillik_once = lambda c: case((c.ay == 0, 0), else_=1)
+
+
 @app.get("/api/aidatlar", response_model=List[schemas.AidatResponse])
 def aidatlar_liste(_: models.Kullanici = Depends(guncel_yonetici), db: Session = Depends(get_db)):
-    return [aidat_yanit(a) for a in db.query(models.Aidat).order_by(models.Aidat.yil.desc(), models.Aidat.ay.desc()).all()]
+    return [aidat_yanit(a) for a in db.query(models.Aidat).order_by(models.Aidat.yil.desc(), _yillik_once(models.Aidat), models.Aidat.ay.desc()).all()]
 
 
 @app.get("/api/aidatlar/benim", response_model=List[schemas.AidatResponse])
 def aidatlar_benim(kullanici: models.Kullanici = Depends(guncel_kullanici), db: Session = Depends(get_db)):
-    return [aidat_yanit(a) for a in db.query(models.Aidat).filter(models.Aidat.kullanici_id == kullanici.id).order_by(models.Aidat.yil.desc(), models.Aidat.ay.desc()).all()]
+    return [aidat_yanit(a) for a in db.query(models.Aidat).filter(models.Aidat.kullanici_id == kullanici.id).order_by(models.Aidat.yil.desc(), _yillik_once(models.Aidat), models.Aidat.ay.desc()).all()]
 
 
 @app.post("/api/aidatlar", response_model=schemas.AidatResponse, status_code=201)
@@ -1103,12 +1106,15 @@ def aidat_sil(
 
 @app.post("/api/aidatlar/benim/ode", response_model=schemas.AidatResponse)
 def aidat_benim_ode(
+    veri: schemas.AidatOdeInput,
     kullanici: models.Kullanici = Depends(guncel_kullanici),
     db: Session = Depends(get_db),
 ):
     bugun = date.today()
-    yil = bugun.year
-    ay = bugun.month
+    yil = veri.yil or bugun.year
+    ay = veri.ay or 0
+    if not (0 <= ay <= 12):
+        raise HTTPException(status_code=400, detail="Geçersiz ay")
     kayit = (
         db.query(models.Aidat)
         .filter(
@@ -1120,7 +1126,8 @@ def aidat_benim_ode(
     )
     if kayit is None:
         ayarlar = {a.anahtar: a.deger for a in db.query(models.SiteAyar).all()}
-        tutar = float(ayarlar.get("aidat_aylik_tutar") or varsayilan_ayarlar.VARSAYILAN_AYARLAR.get("aidat_aylik_tutar", 0) or 0)
+        anahtar = "aidat_aylik_tutar" if ay > 0 else "aidat_yillik_tutar"
+        tutar = float(ayarlar.get(anahtar) or varsayilan_ayarlar.VARSAYILAN_AYARLAR.get(anahtar, 0) or 0)
         kayit = models.Aidat(
             kullanici_id=kullanici.id,
             yil=yil,
@@ -1132,7 +1139,8 @@ def aidat_benim_ode(
         db.commit()
         db.refresh(kayit)
     if kayit.durum == "odendi":
-        raise HTTPException(status_code=400, detail="Bu ayın aidatı zaten ödenmiş")
+        donem = "yıllık aidatı" if ay == 0 else f"{ay}. ay aidatı"
+        raise HTTPException(status_code=400, detail=f"Bu yılın {donem} zaten ödenmiş")
     kayit.durum = "odeyenekadar"
     db.commit()
     db.refresh(kayit)
@@ -1147,8 +1155,8 @@ def aidat_hatirlat(
 ):
     bugun = date.today()
     yil = veri.yil or bugun.year
-    ay = veri.ay or bugun.month
-    if not (1 <= ay <= 12):
+    ay = veri.ay if veri.ay is not None else bugun.month
+    if not (0 <= ay <= 12):
         raise HTTPException(status_code=400, detail="Geçersiz ay")
     odenenler = {
         k[0]
@@ -1173,11 +1181,17 @@ def aidat_hatirlat(
     tokenler = [t[0] for t in sorgu.all() if t[0]]
     ay_isimleri = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
                    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
-    ay_ad = ay_isimleri[ay]
+    if ay == 0:
+        baslik = "Yıllık Aidat Hatırlatması"
+        mesaj = f"{yil} yılı aidatınızı ödemeniz bekleniyor. Ödeme bildirimini yapmayı unutmayın."
+    else:
+        baslik = "Aidat Hatırlatması"
+        ay_ad = ay_isimleri[ay]
+        mesaj = f"{ay_ad} {yil} ayı aidatınızı ödemeniz bekleniyor. Ödeme bildirimini yapmayı unutmayın."
     _expo_push_gonder(
         tokenler,
-        f"Aidat Hatırlatması",
-        f"{ay_ad} {yil} ayı aidatınızı ödemeniz bekleniyor. Odeme bildirimini yapmayı unutmayın.",
+        baslik,
+        mesaj,
         {"ekran": "Aidatlar"},
     )
     return {"mesaj": "Bildirim gönderildi", "hedef_sayi": len(hedef_ids), "gonderilen": len(tokenler)}

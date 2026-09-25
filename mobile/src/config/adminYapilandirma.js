@@ -60,7 +60,7 @@ const REKLAM_ALANLARI = [
 const AIDAT_ALANLARI = [
   { anahtar: "kullanici_id", etiket: "Üye ID", ikon: "person-outline", placeholder: "Üye numarası", keyboardType: "numeric", sayisal: true },
   { anahtar: "yil", etiket: "Yıl", ikon: "calendar-outline", placeholder: "2025", keyboardType: "numeric", sayisal: true },
-  { anahtar: "ay", etiket: "Ay", placeholder: "Seçin", secim: "aylar" },
+  { anahtar: "ay", etiket: "Ay", placeholder: "Seçin", secim: "aidatAy" },
   { anahtar: "tutar", etiket: "Tutar (₺)", ikon: "cash-outline", placeholder: "500", keyboardType: "numeric", sayisal: true },
   { anahtar: "aciklama", etiket: "Açıklama", ikon: "document-text-outline", placeholder: "Not (opsiyonel)", multiline: true, opsiyonel: true },
 ];
@@ -190,10 +190,14 @@ export const KAYIT_MODULLERI = {
     bosMetin: "Henüz aidat kaydı yok",
     bosIkon: "card-outline",
     secimSecenekler: {
-      aylar: AY_ADLARI.map((ad, i) => ({ deger: i + 1, etiket: ad })),
+      aidatAy: [
+        { deger: "0", etiket: "Tüm Yıl" },
+        ...AY_ADLARI.map((ad, i) => ({ deger: String(i + 1), etiket: ad })),
+      ],
     },
     satirBirincil: (a) => `${a.ad || "?"} ${a.soyad || ""}`.trim(),
-    satirIkincil: (a) => `${AY_ADLARI[Number(a.ay) - 1] ?? a.ay} ${a.yil} · ${a.tutar} ₺${a.aciklama ? " · " + a.aciklama : ""}`,
+    satirIkincil: (a) =>
+      `${a.ay == 0 ? `Tüm Yıl ${a.yil}` : `${AY_ADLARI[Number(a.ay) - 1] ?? a.ay} ${a.yil}`} · ${a.tutar} ₺${a.aciklama ? " · " + a.aciklama : ""}`,
     satirRozet: (a) => ({ beklemede: "Bekliyor", odeyenekadar: "Ödendi bildirildi", odendi: "Ödendi", reddedildi: "Reddedildi" }[a.durum] || a.durum),
     satirRozetRenk: (a) =>
       a.durum === "odendi" ? "#2f8f4f" : a.durum === "odeyenekadar" ? "#b8860b" : a.durum === "reddedildi" ? "#cc3b3b" : "#8a5a2b",

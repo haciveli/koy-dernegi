@@ -25,6 +25,11 @@ const ALANLAR = [
 
 const CARI_AY = new Date().getMonth() + 1;
 
+const HATIRLAT_ALANLARI = [
+  { anahtar: "yil", etiket: "Yıl", ikon: "calendar-outline", placeholder: String(new Date().getFullYear()), keyboardType: "numeric", sayisal: true },
+  { anahtar: "ay", etiket: "Dönem", placeholder: "Ay veya Tüm Yıl seçin", secim: "hatirlatAy" },
+];
+
 export default function AidatYonetim() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [yukleniyorForm, setYukleniyorForm] = useState(false);
@@ -32,6 +37,8 @@ export default function AidatYonetim() {
   const [veriler, setVeriler] = useState([]);
   const [uyeler, setUyeler] = useState([]);
   const [formDeger, setFormDeger] = useState({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(CARI_AY), tutar: "", aciklama: "" });
+  const [hatirlatDeger, setHatirlatDeger] = useState({ yil: String(new Date().getFullYear()), ay: "" });
+  const [hatirlatAcik, setHatirlatAcik] = useState(false);
 
   const veriCek = useCallback(async () => {
     try {
@@ -62,10 +69,13 @@ export default function AidatYonetim() {
 
   const formDegistir = (anahtar, deger) => setFormDeger((f) => ({ ...f, [anahtar]: deger }));
 
+  const donemMetni = (madde) =>
+    madde.ay == 0 ? `Tüm Yıl ${madde.yil}` : `${ayAdi(madde.ay)} ${madde.yil}`;
+
   const durumDegistir = (aidat, durum) => {
     Alert.alert(
       "Durum",
-      `${aidat.ad || ""} ${aidat.soyad || ""} · ${ayAdi(aidat.ay)} ${aidat.yil} aidatı "${DURUM_ETIKET[durum]?.metin ?? durum}" yapılsın mı?`,
+      `${aidat.ad || ""} ${aidat.soyad || ""} · ${donemMetni(aidat)} aidatı "${DURUM_ETIKET[durum]?.metin ?? durum}" yapılsın mı?`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -101,34 +111,32 @@ export default function AidatYonetim() {
     ]);
   };
 
-  const hatirlat = () => {
-    const bugun = new Date();
-    Alert.alert(
-      "Aidat Bildirimi Gönder",
-      `Bu ay (${ayAdi(bugun.getMonth() + 1)} ${bugun.getFullYear()}) aidatını ÖDEMEMİŞ üyelere hatırlatma bildirimi gönderilsin mi?`,
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Gönder",
-          onPress: async () => {
-            try {
-              const sonuc = await aidatHatirlat({
-                yil: bugun.getFullYear(),
-                ay: bugun.getMonth() + 1,
-              });
-              Alert.alert(
-                "Bildirim Gönderildi",
-                sonuc?.gonderilen > 0
-                  ? `${sonuc.hedef_sayi} üye hedeflendi, ${sonuc.gonderilen} cihaza bildirim iletildi.`
-                  : sonuc?.mesaj || "Bildirim gönderilecek üye bulunamadı."
-              );
-            } catch (hata) {
-              Alert.alert("Hata", hata?.message || "Bildirim gönderilemedi.");
-            }
-          },
-        },
-      ]
-    );
+  const hatirlatGonder = async () => {
+    const yil = Number(hatirlatDeger.yil);
+    const ay = Number(hatirlatDeger.ay);
+    if (!yil || yil < 2000 || yil > 2100) {
+      Alert.alert("Eksik Bilgi", "Geçerli bir yıl girin.");
+      return;
+    }
+    if (ay < 0 || ay > 12) {
+      Alert.alert("Eksik Bilgi", "Dönem seçin.");
+      return;
+    }
+    setYukleniyorForm(true);
+    try {
+      const sonuc = await aidatHatirlat({ yil, ay });
+      setHatirlatAcik(false);
+      Alert.alert(
+        "Bildirim Gönderildi",
+        sonuc?.gonderilen > 0
+          ? `${sonuc.hedef_sayi} üye hedeflendi, ${sonuc.gonderilen} cihaza bildirim iletildi.`
+          : sonuc?.mesaj || "Bildirim gönderilecek üye bulunamadı."
+      );
+    } catch (hata) {
+      Alert.alert("Hata", hata?.message || "Bildirim gönderilemedi.");
+    } finally {
+      setYukleniyorForm(false);
+    }
   };
 
   const kaydet = async () => {
@@ -171,6 +179,28 @@ export default function AidatYonetim() {
     }
   };
 
+  if (hatirlatAcik) {
+    return (
+      <YonetimForm
+        baslik="Aidat Bildirimi Gönder"
+        altBaslik="Seçtiğiniz dönem aidatını ödememiş üyelere hatırlatma gönderin"
+        alanlar={HATIRLAT_ALANLARI}
+        formDeger={hatirlatDeger}
+        formDegistir={(a, d) => setHatirlatDeger((f) => ({ ...f, [a]: d }))}
+        secimSecenekler={{
+          hatirlatAy: [
+            { deger: "0", etiket: "Tüm Yıl" },
+            ...AY_ADLARI.map((ad, i) => ({ deger: String(i + 1), etiket: ad })),
+          ],
+        }}
+        onKaydet={hatirlatGonder}
+        yukleniyor={yukleniyorForm}
+        onVazgec={() => setHatirlatAcik(false)}
+        kaydetBaslik="Gönder"
+      />
+    );
+  }
+
   if (formAcik) {
     return (
       <YonetimForm
@@ -203,12 +233,12 @@ export default function AidatYonetim() {
         onEkle={() => setFormAcik(true)}
         ikincilBaslik="Aidat Bildirimi Gönder"
         ikincilIkon="megaphone-outline"
-        onIkincil={hatirlat}
+        onIkincil={() => setHatirlatAcik(true)}
         renderSatir={(madde) => (
           <View>
             <AdminSatir
               birincil={`${madde.ad ?? ""} ${madde.soyad ?? ""}`.trim() || `Üye #${madde.kullanici_id}`}
-              ikincil={`${ayAdi(madde.ay)} ${madde.yil} · ${madde.tutar} ₺${madde.aciklama ? " · " + madde.aciklama : ""}`}
+              ikincil={`${donemMetni(madde)} · ${madde.tutar} ₺${madde.aciklama ? " · " + madde.aciklama : ""}`}
               rozet={DURUM_ETIKET[madde.durum]?.metin ?? madde.durum}
               rozetRenk={DURUM_ETIKET[madde.durum]?.renk ?? renkler.metin_soluk}
               onDuzenle={() =>

@@ -72,9 +72,12 @@ export default function Aidat({ navigation, route }) {
 
   const odenecekTutar = (aidat) => {
     try {
+      if (aidat.tutar) return aidat.tutar;
+      const yillik = Number(ayar?.aidat_yillik_tutar || 0);
+      if (aidat.ay == 0 && yillik > 0) return yillik;
       const aylik = Number(ayar?.aidat_aylik_tutar || 0);
-      if (!aidat.tutar && aylik > 0) return aylik;
-      return aidat.tutar || 0;
+      if (aylik > 0) return aylik;
+      return yillik > 0 ? yillik : 0;
     } catch {
       return aidat.tutar || 0;
     }
@@ -84,6 +87,7 @@ export default function Aidat({ navigation, route }) {
   const buYil = typeof bugun.getFullYear === "function" ? bugun.getFullYear() : 2026;
   const buAy = typeof bugun.getMonth === "function" ? bugun.getMonth() + 1 : 1;
   const buAyKaydi = (aidatListe || []).find((a) => a.yil == buYil && a.ay == buAy);
+  const buYilYillikKaydi = (aidatListe || []).find((a) => a.yil == buYil && a.ay == 0);
 
   const borcToplami = (aidatListe || []).reduce((top, a) => {
     if (a.durum === "odendi") return top;
@@ -92,9 +96,10 @@ export default function Aidat({ navigation, route }) {
 
   const odemeBildir = (aidat) => {
     const tutar = odenecekTutar(aidat);
+    const donem = aidat.ay == 0 ? `${aidat.yil} yılı (tüm yıl)` : `${ayAdi(aidat.ay)} ${aidat.yil}`;
     Alert.alert(
       "Ödeme Bildirimi",
-      `${ayAdi(aidat.ay)} ${aidat.yil} aidatı için ${tutar} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
+      `${donem} aidatı için ${tutar} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -113,18 +118,19 @@ export default function Aidat({ navigation, route }) {
     );
   };
 
-  const aylikAidatBildir = () => {
-    const tutar = Number(ayar?.aidat_aylik_tutar || 0);
+  const aylikAidatBildir = (ay, yil) => {
+    const tutar = odenecekTutar({ ay, yil, tutar: 0 });
+    const donem = ay == 0 ? `${yil} yılı (tüm yıl)` : `${ayAdi(ay)} ${yil}`;
     Alert.alert(
-      "Aylık Aidat Bildirimi",
-      `${ayAdi(buAy)} ${buYil} aidatı için ${tutar || "-"} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
+      ay == 0 ? "Yıllık Aidat Bildirimi" : "Aylık Aidat Bildirimi",
+      `${donem} aidatı için ${tutar || "-"} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
           text: "Ödedim",
           onPress: async () => {
             try {
-              await aidatBenimOde();
+              await aidatBenimOde({ yil, ay });
               await cek();
               Alert.alert("Bildirim Alındı", "Yönetici onayı bekleniyor.");
             } catch (hata) {
@@ -206,7 +212,20 @@ export default function Aidat({ navigation, route }) {
                 <Text style={styles.yillikNot}>
                   Bu ayın aidat kaydı henüz girilmedi. Yine de ödemenizi bildirebilirsiniz.
                 </Text>
-                <Button baslik="Bu Ayın Aidatını Bildirdim" ikon="checkmark-circle-outline" onPress={aylikAidatBildir} />
+                <Button baslik="Bu Ayın Aidatını Bildirdim" ikon="checkmark-circle-outline" onPress={() => aylikAidatBildir(buAy, buYil)} />
+              </View>
+            ) : null}
+
+            {!buYilYillikKaydi ? (
+              <View style={styles.yillikKart}>
+                <View style={styles.yillikUst}>
+                  <Text style={styles.yillikYil}>{buYil} · Tüm Yıl</Text>
+                  <Text style={styles.yillikTutar}>{ayar?.aidat_yillik_tutar || "-"} ₺ / yıl</Text>
+                </View>
+                <Text style={styles.yillikNot}>
+                  Yıllık ödeme yapmak isterseniz tüm yılın aidatını tek seferde bildirebilirsiniz.
+                </Text>
+                <Button baslik="Bu Yılın Aidatını Bildirdim" ikon="calendar-outline" onPress={() => aylikAidatBildir(0, buYil)} />
               </View>
             ) : null}
 
@@ -224,8 +243,8 @@ export default function Aidat({ navigation, route }) {
                   <View key={aidat.id} style={styles.aidatKart}>
                     <View style={styles.aidatUst}>
                       <View style={styles.aidatYil}>
-                        <Text style={styles.aidatYilMetin}>{ayAdi(aidat.ay)} {aidat.yil}</Text>
-                        <Text style={styles.aidatTutar}>{odenecekTutar(aidat)} ₺ / ay</Text>
+                        <Text style={styles.aidatYilMetin}>{aidat.ay == 0 ? `Tüm Yıl ${aidat.yil}` : `${ayAdi(aidat.ay)} ${aidat.yil}`}</Text>
+                        <Text style={styles.aidatTutar}>{odenecekTutar(aidat)} ₺{aidat.ay == 0 ? "" : " / ay"}</Text>
                       </View>
                       <View style={[styles.durumRozet, { backgroundColor: durum.renk }]}>
                         <Text style={styles.durumMetin}>{durum.metin}</Text>

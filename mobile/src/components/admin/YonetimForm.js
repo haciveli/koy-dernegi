@@ -86,9 +86,8 @@ export default function YonetimForm({
 }) {
   const [secimAcik, setSecimAcik] = useState(null);
 
-  const secimAlan = alanlar.find((a) => a.secim);
-  const secenekler = secimAlan ? (secimSecenekler[secimAlan.secim] ?? []) : [];
-  const seciliEtiket = secimAlan && secenekler.find((s) => String(s.deger) === String(formDeger?.[secimAlan.anahtar] ?? ""))?.etiket;
+  const aktifSecim = alanlar.find((a) => a.secim && a.anahtar === secimAcik);
+  const aktifSecenekler = aktifSecim ? (secimSecenekler[aktifSecim.secim] ?? []) : [];
 
   return (
     <KeyboardAvoidingView
@@ -165,18 +164,18 @@ export default function YonetimForm({
       <Modal visible={!!secimAcik} transparent animationType="slide" onRequestClose={() => setSecimAcik(null)}>
         <TouchableOpacity style={styles.modalSise} activeOpacity={1} onPress={() => setSecimAcik(null)}>
           <View style={styles.modalKutu}>
-            <Text style={styles.modalBaslik}>{secimAlan?.etiket ?? "Seçim"}</Text>
+            <Text style={styles.modalBaslik}>{aktifSecim?.etiket ?? "Seçim"}</Text>
             <FlatList
-              data={secenekler}
+              data={aktifSecenekler}
               keyExtractor={(s, i) => String(s.deger ?? i)}
               renderItem={({ item }) => {
-                const seciliMi = String(item.deger) === String(formDeger?.[secimAlan?.anahtar] ?? "");
+                const seciliMi = String(item.deger) === String(formDeger?.[aktifSecim?.anahtar] ?? "");
                 return (
                   <TouchableOpacity
                     style={[styles.modalSatir, seciliMi && styles.modalSatirAktif]}
                     activeOpacity={0.7}
                     onPress={() => {
-                      formDegistir(secimAlan.anahtar, String(item.deger));
+                      formDegistir(aktifSecim.anahtar, String(item.deger));
                       setSecimAcik(null);
                     }}
                   >

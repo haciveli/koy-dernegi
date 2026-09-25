@@ -279,6 +279,11 @@ class AidatHatirlatInput(BaseModel):
     ay: Optional[int] = None
 
 
+class AidatOdeInput(BaseModel):
+    yil: Optional[int] = None
+    ay: Optional[int] = None
+
+
 class BagisCreate(BaseModel):
     tutar: int
     ad: str
