@@ -18,13 +18,13 @@ const DURUM_ETIKET = {
   reddedildi: { metin: "Reddedildi", renk: renkler.tehlikeli },
 };
 
-export default function Aidat({ navigation }) {
+export default function Aidat({ navigation, route }) {
   const { kullanici } = useAuth();
   const [yukleniyor, setYukleniyor] = useState(true);
   const [ayar, setAyar] = useState(null);
   const [aidatListe, setAidatListe] = useState([]);
   const [bagisListe, setBagisListe] = useState([]);
-  const [sekme, setSekme] = useState("aidat");
+  const [sekme, setSekme] = useState(route?.params?.sekme === "bagis" ? "bagis" : "aidat");
   const [bagisTutar, setBagisTutar] = useState("");
   const [bagisAciklama, setBagisAciklama] = useState("");
   const [bagisGonderiliyor, setBagisGonderiliyor] = useState(false);

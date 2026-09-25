@@ -17,10 +17,17 @@ function BekleyenBildirimYonlendirici() {
       const abonelik = bildirimYanitiniDinle((veri) => {
         const navigator = navigasyonRef.current;
         if (!navigator) return;
+        if (veri.tip === "sohbet") {
+          navigator.navigate("Kanal", { aliciId: veri.aliciId ?? null, baslik: veri.gonderen ? `${veri.gonderen} ile sohbet` : "Sohbet" });
+          return;
+        }
         const ekran = veri.ekran;
         const id = veri.id;
         if (ekran === "ToplantiDetay" && veri.toplanti_id) {
           navigator.navigate("ToplantiDetay", { id: veri.toplanti_id });
+        } else if (ekran === "Toplantilar") {
+          if (id) navigator.navigate("ToplantiDetay", { id });
+          else navigator.navigate("Toplantilar");
         } else if (ekran === "Duyurular" || ekran === "DuyuruDetay") {
           if (id) navigator.navigate("DuyuruDetay", { id });
           else navigator.navigate("Tabs", { screen: "DuyuruTab" });
@@ -28,7 +35,7 @@ function BekleyenBildirimYonlendirici() {
           if (id) navigator.navigate("EtkinlikDetay", { id });
           else navigator.navigate("Tabs", { screen: "EtkinlikTab" });
         } else if (ekran === "Aidatlar" || ekran === "Bagislar") {
-          navigator.navigate("Aidat");
+          navigator.navigate("Aidat", { sekme: ekran === "Bagislar" ? "bagis" : "aidat" });
         } else if (ekran === "Sohbet") {
           navigator.navigate("Tabs", { screen: "SohbetTab" });
         } else {

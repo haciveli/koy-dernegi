@@ -31,14 +31,15 @@ export default function ToplantiDetay({ route }) {
   const [gonderiliyor, setGonderiliyor] = useState(false);
 
   const veriCek = useCallback(() => {
-    if (!toplanti?.id) return;
+    const hedefId = toplanti?.id || route.params?.toplanti_id;
+    if (!hedefId) return;
     setYukleniyor(true);
     import("../api")
-      .then(({ toplantiDetay }) => toplantiDetay(toplanti.id))
+      .then(({ toplantiDetay }) => toplantiDetay(hedefId))
       .then((t) => setToplanti(t))
       .catch(() => {})
       .finally(() => setYukleniyor(false));
-  }, [toplanti?.id]);
+  }, [toplanti?.id, route.params?.toplanti_id]);
 
   useFocusEffect(
     useCallback(() => {

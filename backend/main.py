@@ -936,7 +936,7 @@ def chat_mesaj_gonder(
             f"Yeni mesaj: {gonderen_ad}",
             icerik[:120],
             kullanici_id=veri.alici_id,
-            veri={"tip": "sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad},
+            veri={"tip": "sohbet", "ekran": "Sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad, "aliciId": veri.alici_id, "gonderenId": kullanici.id},
             tur="mesaj",
         )
     else:
@@ -945,7 +945,7 @@ def chat_mesaj_gonder(
             f"Genel Sohbet: {gonderen_ad}",
             icerik[:120],
             gonderen_haric_id=kullanici.id,
-            veri={"tip": "sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad},
+            veri={"tip": "sohbet", "ekran": "Sohbet", "mesaj_id": mesaj.id, "gonderen": gonderen_ad, "aliciId": None},
             tur="mesaj",
         )
     return mesaj_tamami(db, mesaj)
