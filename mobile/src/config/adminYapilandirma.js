@@ -65,6 +65,7 @@ const AIDAT_ALANLARI = [
 
 const BAGIS_ALANLARI = [
   { anahtar: "tutar", etiket: "Tutar (₺)", ikon: "cash-outline", placeholder: "250", keyboardType: "numeric", sayisal: true },
+  { anahtar: "durum", etiket: "Durum", placeholder: "Seçin", secim: "bagisDurum" },
   { anahtar: "ad", etiket: "Ad Soyad", ikon: "person-outline", placeholder: "Bağışçı adı" },
   { anahtar: "email", etiket: "E-posta", ikon: "mail-outline", placeholder: "bagis@ornek.com", keyboardType: "email-address", yazim: "none" },
   { anahtar: "aciklama", etiket: "Açıklama", ikon: "document-text-outline", placeholder: "Bağış amacı (opsiyonel)", multiline: true, opsiyonel: true },
@@ -204,6 +205,13 @@ export const KAYIT_MODULLERI = {
     sil: bagisSil,
     bosMetin: "Henüz bağış kaydı yok",
     bosIkon: "heart-outline",
+    secimSecenekler: {
+      bagisDurum: [
+        { deger: "beklemede", etiket: "Bekliyor" },
+        { deger: "onaylandi", etiket: "Onaylandı" },
+        { deger: "reddedildi", etiket: "Reddedildi" },
+      ],
+    },
     satirBirincil: (b) => b.ad || "Anonim",
     satirIkincil: (b) => `${b.tutar} ₺${b.aciklama ? " · " + b.aciklama : ""}`,
     satirRozet: (b) => ({ beklemede: "Bekliyor", onaylandi: "Onaylandı", reddedildi: "Reddedildi" }[b.durum] || b.durum),

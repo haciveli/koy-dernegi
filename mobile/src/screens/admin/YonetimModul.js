@@ -98,6 +98,7 @@ export default function YonetimModul({ route, tur }) {
         alanlar={config.alanlar}
         formDeger={formDeger}
         formDegistir={formDegistir}
+        secimSecenekler={config.secimSecenekler ?? {}}
         onKaydet={kaydet}
         yukleniyor={yukleniyorForm}
         onVazgec={() => {

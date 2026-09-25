@@ -1189,9 +1189,9 @@ def bagis_guncelle(
         raise HTTPException(status_code=404, detail="Bağış kaydı bulunamadı")
     eski_durum = bagis.durum
     sonuc = guncelle(db, bagis, veri.model_dump())
-    if eski_durum != sonuc.durum and sonuc.kullanici_id and sonuc.durum in ("onayli", "reddedildi"):
+    if eski_durum != sonuc.durum and sonuc.kullanici_id and sonuc.durum in ("onaylandi", "reddedildi"):
         bildirim_gonder(db, "Bağış Durumu",
-                        "Bağışınız onaylandı." if sonuc.durum == "onayli" else "Bağışınız onaylanmadı.",
+                        "Bağışınız onaylandı." if sonuc.durum == "onaylandi" else "Bağışınız onaylanmadı.",
                         kullanici_id=sonuc.kullanici_id, veri={"ekran": "Bagislar"}, tur="bagis")
     return sonuc
 
