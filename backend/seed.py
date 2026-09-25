@@ -33,7 +33,7 @@ db.commit()
 yonetici_id = yonetici.id
 
 duyurular = [
-    ("Üyelik Aidatları Güncellendi", "2026 yılı aidat tutarı yıllık 500 TL olarak belirlenmiştir. Aidatlar kasım ayı sonuna kadar yatırılabilir.", "Genel"),
+    ("Üyelik Aidatları Güncellendi", "Aylık aidat tutarı 500 TL olarak belirlenmiştir. Aidatlar her ayın sonuna kadar yatırılabilir.", "Genel"),
     ("Gençlik Bursu Başvuruları Başladı", "Üniversite okuyan köyümüz gençleri için burs başvuruları açılmıştır. Başvuru için dernek ofisine uğrayabilirsiniz.", "Eğitim"),
     ("Kurban Bayramı Yardım Organizasyonu", "İhtiyaç sahibi aileler için kurban payı toplama organizasyonumuz başlamıştır.", "Hayır"),
     ("Köy Kütüphanesi Açıldı", "Gençlerimiz için kurduğumuz köy kütüphanesi cumartesi günleri 14:00-18:00 saatleri arasında hizmet verecektir.", "Kültür"),

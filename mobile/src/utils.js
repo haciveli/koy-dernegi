@@ -15,3 +15,14 @@ export function mesajSaati(iso) {
     return "";
   }
 }
+
+export const AY_ADLARI = [
+  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+];
+
+export function ayAdi(ay) {
+  const n = Number(ay);
+  if (!n || n < 1 || n > 12) return "";
+  return AY_ADLARI[n - 1];
+}

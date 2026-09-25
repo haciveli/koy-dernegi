@@ -246,6 +246,7 @@ class ReklamResponse(BaseModel):
 class AidatCreate(BaseModel):
     kullanici_id: int
     yil: int
+    ay: int = 1
     tutar: int = 0
     aciklama: Optional[str] = None
 
@@ -262,6 +263,7 @@ class AidatResponse(BaseModel):
     ad: Optional[str] = None
     soyad: Optional[str] = None
     yil: int
+    ay: int
     tutar: int
     durum: str
     aciklama: Optional[str]

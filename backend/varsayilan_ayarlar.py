@@ -33,7 +33,7 @@ VARSAYILAN_AYARLAR = {
     "ofis_saatleri": "Pazartesi - Cuma: 09:00 - 18:00\nCumartesi: 10:00 - 15:00\nPazar: Kapalı",
 
     # Aidat ve Bağış
-    "aidat_yillik_tutar": "500",
+    "aidat_aylik_tutar": "500",
     "aidat_iban": "TR45 0000 0000 0000 0000 0000 00",
     "aidat_banka": "Ziraat Bankası",
     "aidat_alici": "Köyüme Gönül Derneği",

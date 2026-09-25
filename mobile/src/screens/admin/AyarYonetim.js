@@ -19,7 +19,7 @@ const AYAR_ALANLARI = [
   { anahtar: "iletisim_adres", etiket: "Adres", ikon: "map-outline", placeholder: "Adres" },
   { anahtar: "iletisim_telefon", etiket: "Telefon", ikon: "call-outline", placeholder: "0 (___) ___ __ __", keyboardType: "phone-pad" },
   { anahtar: "iletisim_email", etiket: "E-posta", ikon: "mail-outline", placeholder: "info@koy.com", keyboardType: "email-address", yazim: "none" },
-  { anahtar: "aidat_yillik_tutar", etiket: "Yıllık Aidat (₺)", ikon: "cash-outline", placeholder: "500", keyboardType: "numeric", yazim: "none" },
+  { anahtar: "aidat_aylik_tutar", etiket: "Aylık Aidat (₺)", ikon: "cash-outline", placeholder: "500", keyboardType: "numeric", yazim: "none" },
   { anahtar: "aidat_banka", etiket: "Aidat Bankası", ikon: "business-outline", placeholder: "Bankanız" },
   { anahtar: "aidat_iban", etiket: "Aidat IBAN", ikon: "card-outline", placeholder: "TR00 0000 ...", yazim: "none" },
   { anahtar: "aidat_alici", etiket: "Aidat Alıcı", ikon: "person-outline", placeholder: "Dernek adı" },

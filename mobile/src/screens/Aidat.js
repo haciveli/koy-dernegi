@@ -10,6 +10,7 @@ import FormInput from "../components/FormInput";
 import EmptyState from "../components/EmptyState";
 import LoadingView from "../components/LoadingView";
 import { renkler, olcutler } from "../theme";
+import { ayAdi } from "../utils";
 
 const DURUM_ETIKET = {
   beklemede: { metin: "Bekliyor", renk: renkler.vurgu_600 },
@@ -71,16 +72,18 @@ export default function Aidat({ navigation, route }) {
 
   const odenecekTutar = (aidat) => {
     try {
-      const yillik = Number(ayar?.aidat_yillik_tutar || 0);
-      if (!aidat.tutar && yillik > 0) return yillik;
+      const aylik = Number(ayar?.aidat_aylik_tutar || 0);
+      if (!aidat.tutar && aylik > 0) return aylik;
       return aidat.tutar || 0;
     } catch {
       return aidat.tutar || 0;
     }
   };
 
-  const buYil = typeof new Date().getFullYear === "function" ? new Date().getFullYear() : 2026;
-  const buYilKaydi = (aidatListe || []).find((a) => a.yil == buYil);
+  const bugun = new Date();
+  const buYil = typeof bugun.getFullYear === "function" ? bugun.getFullYear() : 2026;
+  const buAy = typeof bugun.getMonth === "function" ? bugun.getMonth() + 1 : 1;
+  const buAyKaydi = (aidatListe || []).find((a) => a.yil == buYil && a.ay == buAy);
 
   const borcToplami = (aidatListe || []).reduce((top, a) => {
     if (a.durum === "odendi") return top;
@@ -91,7 +94,7 @@ export default function Aidat({ navigation, route }) {
     const tutar = odenecekTutar(aidat);
     Alert.alert(
       "Ödeme Bildirimi",
-      `${aidat.yil} yılı aidatı için ${tutar} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
+      `${ayAdi(aidat.ay)} ${aidat.yil} aidatı için ${tutar} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -110,11 +113,11 @@ export default function Aidat({ navigation, route }) {
     );
   };
 
-  const yillikAidatBildir = () => {
-    const tutar = Number(ayar?.aidat_yillik_tutar || 0);
+  const aylikAidatBildir = () => {
+    const tutar = Number(ayar?.aidat_aylik_tutar || 0);
     Alert.alert(
-      "Yıllık Aidat Bildirimi",
-      `${buYil} yılı aidatı için ${tutar || "-"} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
+      "Aylık Aidat Bildirimi",
+      `${ayAdi(buAy)} ${buYil} aidatı için ${tutar || "-"} ₺ ödediğinizi onaylıyor musunuz?\n\nHavale/EFT açıklamasına "${ayar?.aidat_aciklama || ""}" yazınız.\nYönetici onayından sonra durum "Ödendi" olur.`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -194,23 +197,23 @@ export default function Aidat({ navigation, route }) {
               </View>
             ) : null}
 
-            {!buYilKaydi ? (
+            {!buAyKaydi ? (
               <View style={styles.yillikKart}>
                 <View style={styles.yillikUst}>
-                  <Text style={styles.yillikYil}>{buYil}</Text>
-                  <Text style={styles.yillikTutar}>{ayar?.aidat_yillik_tutar || "-"} ₺ / yıl</Text>
+                  <Text style={styles.yillikYil}>{ayAdi(buAy)} {buYil}</Text>
+                  <Text style={styles.yillikTutar}>{ayar?.aidat_aylik_tutar || "-"} ₺ / ay</Text>
                 </View>
                 <Text style={styles.yillikNot}>
-                  Bu yılın aidat kaydı henüz girilmedi. Yine de ödemenizi bildirebilirsiniz.
+                  Bu ayın aidat kaydı henüz girilmedi. Yine de ödemenizi bildirebilirsiniz.
                 </Text>
-                <Button baslik="Yıllık Aidatımı Bildirdim" ikon="checkmark-circle-outline" onPress={yillikAidatBildir} />
+                <Button baslik="Bu Ayın Aidatını Bildirdim" ikon="checkmark-circle-outline" onPress={aylikAidatBildir} />
               </View>
             ) : null}
 
             {aidatListe.length === 0 ? (
               <EmptyState
                 ikon="card-outline"
-                metin={`Henüz aidat kaydınız yok. Yıllık aidat: ${ayar?.aidat_yillik_tutar || "-"} ₺`}
+                metin={`Henüz aidat kaydınız yok. Aylık aidat: ${ayar?.aidat_aylik_tutar || "-"} ₺`}
               />
             ) : (
               aidatListe.map((aidat) => {
@@ -221,8 +224,8 @@ export default function Aidat({ navigation, route }) {
                   <View key={aidat.id} style={styles.aidatKart}>
                     <View style={styles.aidatUst}>
                       <View style={styles.aidatYil}>
-                        <Text style={styles.aidatYilMetin}>{aidat.yil}</Text>
-                        <Text style={styles.aidatTutar}>{odenecekTutar(aidat)} ₺</Text>
+                        <Text style={styles.aidatYilMetin}>{ayAdi(aidat.ay)} {aidat.yil}</Text>
+                        <Text style={styles.aidatTutar}>{odenecekTutar(aidat)} ₺ / ay</Text>
                       </View>
                       <View style={[styles.durumRozet, { backgroundColor: durum.renk }]}>
                         <Text style={styles.durumMetin}>{durum.metin}</Text>

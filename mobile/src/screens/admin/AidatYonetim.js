@@ -6,6 +6,7 @@ import AdminListe, { AdminSatir } from "../../components/admin/AdminListe";
 import YonetimForm from "../../components/admin/YonetimForm";
 import PageHeader from "../../components/PageHeader";
 import { renkler } from "../../theme";
+import { ayAdi, AY_ADLARI } from "../../utils";
 
 const DURUM_ETIKET = {
   beklemede: { metin: "Bekliyor", renk: "#8a5a2b" },
@@ -17,9 +18,12 @@ const DURUM_ETIKET = {
 const ALANLAR = [
   { anahtar: "kullanici_id", etiket: "Üye", placeholder: "Üye seçin", secim: "uyeler" },
   { anahtar: "yil", etiket: "Yıl", ikon: "calendar-outline", placeholder: "2024", keyboardType: "numeric", sayisal: true },
+  { anahtar: "ay", etiket: "Ay", placeholder: "Ay seçin", secim: "aylar" },
   { anahtar: "tutar", etiket: "Tutar (₺)", ikon: "cash-outline", placeholder: "500", keyboardType: "numeric", sayisal: true },
-  { anahtar: "aciklama", etiket: "Açıklama (opsiyonel)", ikon: "document-text-outline", placeholder: "Örn. 2024 yılı aidatı", multiline: true },
+  { anahtar: "aciklama", etiket: "Açıklama (opsiyonel)", ikon: "document-text-outline", placeholder: "Örn. Ekim 2026 aidatı", multiline: true },
 ];
+
+const CARI_AY = new Date().getMonth() + 1;
 
 export default function AidatYonetim() {
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -27,7 +31,7 @@ export default function AidatYonetim() {
   const [formAcik, setFormAcik] = useState(false);
   const [veriler, setVeriler] = useState([]);
   const [uyeler, setUyeler] = useState([]);
-  const [formDeger, setFormDeger] = useState({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
+  const [formDeger, setFormDeger] = useState({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(CARI_AY), tutar: "", aciklama: "" });
 
   const veriCek = useCallback(async () => {
     try {
@@ -61,7 +65,7 @@ export default function AidatYonetim() {
   const durumDegistir = (aidat, durum) => {
     Alert.alert(
       "Durum",
-      `${aidat.ad || ""} ${aidat.soyad || ""} · ${aidat.yil} aidatı "${DURUM_ETIKET[durum]?.metin ?? durum}" yapılsın mı?`,
+      `${aidat.ad || ""} ${aidat.soyad || ""} · ${ayAdi(aidat.ay)} ${aidat.yil} aidatı "${DURUM_ETIKET[durum]?.metin ?? durum}" yapılsın mı?`,
       [
         { text: "Vazgeç", style: "cancel" },
         {
@@ -103,9 +107,14 @@ export default function AidatYonetim() {
       return;
     }
     const yil = Number(formDeger.yil);
+    const ay = Number(formDeger.ay || CARI_AY);
     const tutar = Number(formDeger.tutar || 0);
     if (!yil || yil < 2000 || yil > 2100) {
       Alert.alert("Eksik Bilgi", "Geçerli bir yıl girin.");
+      return;
+    }
+    if (!ay || ay < 1 || ay > 12) {
+      Alert.alert("Eksik Bilgi", "Geçerli bir ay seçin.");
       return;
     }
     if (tutar < 0) {
@@ -117,11 +126,12 @@ export default function AidatYonetim() {
       await aidatEkle({
         kullanici_id: Number(formDeger.kullanici_id),
         yil,
+        ay,
         tutar,
         aciklama: formDeger.aciklama?.trim() || null,
       });
       setFormAcik(false);
-      setFormDeger({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
+      setFormDeger({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(CARI_AY), tutar: "", aciklama: "" });
       await veriCek();
       Alert.alert("Kaydedildi", "Aidat kaydı eklendi.");
     } catch (hata) {
@@ -135,16 +145,16 @@ export default function AidatYonetim() {
     return (
       <YonetimForm
         baslik="Yeni Aidat"
-        altBaslik="Üyeye aidat kaydı ekleyin (geçmiş yıllar dahil)"
+        altBaslik="Üyeye aidat kaydı ekleyin (geçmiş dönemler dahil)"
         alanlar={ALANLAR}
         formDeger={formDeger}
         formDegistir={formDegistir}
-        secimSecenekler={{ uyeler: uyeSecenekler }}
+        secimSecenekler={{ uyeler: uyeSecenekler, aylar: AY_ADLARI.map((ad, i) => ({ deger: i + 1, etiket: ad })) }}
         onKaydet={kaydet}
         yukleniyor={yukleniyorForm}
         onVazgec={() => {
           setFormAcik(false);
-          setFormDeger({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
+          setFormDeger({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(CARI_AY), tutar: "", aciklama: "" });
         }}
         kaydetBaslik="Kaydet"
       />
@@ -165,7 +175,7 @@ export default function AidatYonetim() {
           <View>
             <AdminSatir
               birincil={`${madde.ad ?? ""} ${madde.soyad ?? ""}`.trim() || `Üye #${madde.kullanici_id}`}
-              ikincil={`${madde.yil} · ${madde.tutar} ₺${madde.aciklama ? " · " + madde.aciklama : ""}`}
+              ikincil={`${ayAdi(madde.ay)} ${madde.yil} · ${madde.tutar} ₺${madde.aciklama ? " · " + madde.aciklama : ""}`}
               rozet={DURUM_ETIKET[madde.durum]?.metin ?? madde.durum}
               rozetRenk={DURUM_ETIKET[madde.durum]?.renk ?? renkler.metin_soluk}
               onDuzenle={() =>

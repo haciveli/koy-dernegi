@@ -171,6 +171,7 @@ class Aidat(Base):
     id = Column(Integer, primary_key=True, index=True)
     kullanici_id = Column(Integer, ForeignKey("kullanicilar.id"))
     yil = Column(Integer, index=True)
+    ay = Column(Integer, default=1, index=True)
     tutar = Column(Integer, default=0)
     durum = Column(String, default="beklemede")
     aciklama = Column(Text)

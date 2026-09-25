@@ -1012,6 +1012,7 @@ def aidat_yanit(aidat: models.Aidat) -> dict:
         "ad": kullanici.ad if kullanici else None,
         "soyad": kullanici.soyad if kullanici else None,
         "yil": aidat.yil,
+        "ay": aidat.ay,
         "tutar": aidat.tutar,
         "durum": aidat.durum,
         "aciklama": aidat.aciklama,
@@ -1022,12 +1023,12 @@ def aidat_yanit(aidat: models.Aidat) -> dict:
 
 @app.get("/api/aidatlar", response_model=List[schemas.AidatResponse])
 def aidatlar_liste(_: models.Kullanici = Depends(guncel_yonetici), db: Session = Depends(get_db)):
-    return [aidat_yanit(a) for a in db.query(models.Aidat).order_by(models.Aidat.yil.desc()).all()]
+    return [aidat_yanit(a) for a in db.query(models.Aidat).order_by(models.Aidat.yil.desc(), models.Aidat.ay.desc()).all()]
 
 
 @app.get("/api/aidatlar/benim", response_model=List[schemas.AidatResponse])
 def aidatlar_benim(kullanici: models.Kullanici = Depends(guncel_kullanici), db: Session = Depends(get_db)):
-    return [aidat_yanit(a) for a in db.query(models.Aidat).filter(models.Aidat.kullanici_id == kullanici.id).order_by(models.Aidat.yil.desc()).all()]
+    return [aidat_yanit(a) for a in db.query(models.Aidat).filter(models.Aidat.kullanici_id == kullanici.id).order_by(models.Aidat.yil.desc(), models.Aidat.ay.desc()).all()]
 
 
 @app.post("/api/aidatlar", response_model=schemas.AidatResponse, status_code=201)
@@ -1044,6 +1045,7 @@ def aidat_ekle(
     aidat = models.Aidat(
         kullanici_id=veri.kullanici_id,
         yil=veri.yil,
+        ay=veri.ay,
         tutar=veri.tutar,
         durum="beklemede",
         aciklama=veri.aciklama,
@@ -1051,10 +1053,11 @@ def aidat_ekle(
     db.add(aidat)
     db.commit()
     db.refresh(aidat)
+    donem = f"{veri.yil} yılı {veri.ay}. ayı"
     bildirim_gonder(
         db,
         "Aidat Kaydı Oluşturuldu",
-        f"{veri.yil} yılı aidatınız kaydedildi ({aidat.tutar} ₺). Ödemenizi yaptığınızda bildirin.",
+        f"{donem} aidatınız kaydedildi ({aidat.tutar} ₺). Ödemenizi yaptığınızda bildirin.",
         kullanici_id=veri.kullanici_id,
         veri={"ekran": "Aidatlar"},
         tur="aidat",
@@ -1075,11 +1078,12 @@ def aidat_guncelle(
     eski_durum = aidat.durum
     sonuc = guncelle(db, aidat, veri.model_dump())
     if eski_durum != sonuc.durum:
+        donem = f"{sonuc.yil} yılı {sonuc.ay}. ayı"
         if sonuc.durum == "odendi":
-            bildirim_gonder(db, "Aidat Ödemeniz Onaylandı", f"{sonuc.yil} yılı aidatınız ödendi olarak işaretlendi.",
+            bildirim_gonder(db, "Aidat Ödemeniz Onaylandı", f"{donem} aidatınız ödendi olarak işaretlendi.",
                             kullanici_id=sonuc.kullanici_id, veri={"ekran": "Aidatlar"}, tur="aidat")
         elif sonuc.durum == "reddedildi":
-            bildirim_gonder(db, "Aidat Durumu", f"{sonuc.yil} yılı aidat ödemeniz onaylanmadı.",
+            bildirim_gonder(db, "Aidat Durumu", f"{donem} aidat ödemeniz onaylanmadı.",
                             kullanici_id=sonuc.kullanici_id, veri={"ekran": "Aidatlar"}, tur="aidat")
     return aidat_yanit(sonuc)
 
@@ -1102,18 +1106,25 @@ def aidat_benim_ode(
     kullanici: models.Kullanici = Depends(guncel_kullanici),
     db: Session = Depends(get_db),
 ):
-    yil = date.today().year
+    bugun = date.today()
+    yil = bugun.year
+    ay = bugun.month
     kayit = (
         db.query(models.Aidat)
-        .filter(models.Aidat.kullanici_id == kullanici.id, models.Aidat.yil == yil)
+        .filter(
+            models.Aidat.kullanici_id == kullanici.id,
+            models.Aidat.yil == yil,
+            models.Aidat.ay == ay,
+        )
         .first()
     )
     if kayit is None:
         ayarlar = {a.anahtar: a.deger for a in db.query(models.SiteAyar).all()}
-        tutar = float(ayarlar.get("aidat_yillik_tutar") or varsayilan_ayarlar.VARSAYILAN_AYARLAR.get("aidat_yillik_tutar", 0) or 0)
+        tutar = float(ayarlar.get("aidat_aylik_tutar") or varsayilan_ayarlar.VARSAYILAN_AYARLAR.get("aidat_aylik_tutar", 0) or 0)
         kayit = models.Aidat(
             kullanici_id=kullanici.id,
             yil=yil,
+            ay=ay,
             tutar=tutar,
             durum="beklemede",
         )
@@ -1121,7 +1132,7 @@ def aidat_benim_ode(
         db.commit()
         db.refresh(kayit)
     if kayit.durum == "odendi":
-        raise HTTPException(status_code=400, detail="Bu yılın aidatı zaten ödenmiş")
+        raise HTTPException(status_code=400, detail="Bu ayın aidatı zaten ödenmiş")
     kayit.durum = "odeyenekadar"
     db.commit()
     db.refresh(kayit)
