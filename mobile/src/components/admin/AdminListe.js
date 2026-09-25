@@ -21,6 +21,9 @@ export default function AdminListe({
   altMetin,
   ekleBaslik = "Yeni Ekle",
   onEkle,
+  ikincilBaslik,
+  onIkincil,
+  ikincilIkon = "notifications-outline",
   renderSatir,
 }) {
   if (yukleniyor) {
@@ -48,12 +51,20 @@ export default function AdminListe({
         }
         renderItem={({ item }) => <View style={styles.satirKap}>{renderSatir(item)}</View>}
       />
-      {onEkle ? (
+      {onEkle || onIkincil ? (
         <View style={styles.sabitAlt}>
-          <TouchableOpacity style={styles.sabitButon} activeOpacity={0.85} onPress={onEkle}>
-            <Ionicons name="add" size={20} color="#fff" />
-            <Text style={styles.sabitButonMetin}>{ekleBaslik}</Text>
-          </TouchableOpacity>
+          {onEkle ? (
+            <TouchableOpacity style={[styles.sabitButon, onIkincil ? styles.sabitButonYarim : null]} activeOpacity={0.85} onPress={onEkle}>
+              <Ionicons name="add" size={20} color="#fff" />
+              <Text style={styles.sabitButonMetin}>{ekleBaslik}</Text>
+            </TouchableOpacity>
+          ) : null}
+          {onIkincil ? (
+            <TouchableOpacity style={[styles.sabitButon, styles.sabitButonIkincil, onEkle ? styles.sabitButonYarim : null]} activeOpacity={0.85} onPress={onIkincil}>
+              <Ionicons name={ikincilIkon} size={18} color={renkler.ana_600} />
+              <Text style={styles.sabitButonMetinIkincil}>{ikincilBaslik}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -153,8 +164,9 @@ const styles = StyleSheet.create({
   },
   aksiyonSil: { backgroundColor: "#fdecec" },
   aksiyonRol: { backgroundColor: renkler.ana_50 },
-  sabitAlt: { position: "absolute", left: 16, right: 16, bottom: 28 },
+  sabitAlt: { position: "absolute", left: 16, right: 16, bottom: 28, flexDirection: "row", gap: 10 },
   sabitButon: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -163,5 +175,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: olcutler.buton_radius,
   },
+  sabitButonIkincil: {
+    backgroundColor: renkler.ana_50,
+    borderWidth: 1,
+    borderColor: renkler.ana_300,
+  },
+  sabitButonYarim: { flex: 1 },
   sabitButonMetin: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  sabitButonMetinIkincil: { color: renkler.ana_700, fontSize: 15, fontWeight: "700" },
 });

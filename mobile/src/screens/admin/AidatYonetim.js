@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { aidatlar, aidatEkle, aidatGuncelle, aidatSil, kullanicilar } from "../../api";
+import { aidatlar, aidatEkle, aidatGuncelle, aidatHatirlat, aidatSil, kullanicilar } from "../../api";
 import AdminListe, { AdminSatir } from "../../components/admin/AdminListe";
 import YonetimForm from "../../components/admin/YonetimForm";
 import PageHeader from "../../components/PageHeader";
@@ -101,6 +101,36 @@ export default function AidatYonetim() {
     ]);
   };
 
+  const hatirlat = () => {
+    const bugun = new Date();
+    Alert.alert(
+      "Aidat Bildirimi Gönder",
+      `Bu ay (${ayAdi(bugun.getMonth() + 1)} ${bugun.getFullYear()}) aidatını ÖDEMEMİŞ üyelere hatırlatma bildirimi gönderilsin mi?`,
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Gönder",
+          onPress: async () => {
+            try {
+              const sonuc = await aidatHatirlat({
+                yil: bugun.getFullYear(),
+                ay: bugun.getMonth() + 1,
+              });
+              Alert.alert(
+                "Bildirim Gönderildi",
+                sonuc?.gonderilen > 0
+                  ? `${sonuc.hedef_sayi} üye hedeflendi, ${sonuc.gonderilen} cihaza bildirim iletildi.`
+                  : sonuc?.mesaj || "Bildirim gönderilecek üye bulunamadı."
+              );
+            } catch (hata) {
+              Alert.alert("Hata", hata?.message || "Bildirim gönderilemedi.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const kaydet = async () => {
     if (!formDeger.kullanici_id) {
       Alert.alert("Eksik Bilgi", "Üye seçin.");
@@ -171,6 +201,9 @@ export default function AidatYonetim() {
         bosIkon="card-outline"
         ekleBaslik="Yeni Aidat Ekle"
         onEkle={() => setFormAcik(true)}
+        ikincilBaslik="Aidat Bildirimi Gönder"
+        ikincilIkon="megaphone-outline"
+        onIkincil={hatirlat}
         renderSatir={(madde) => (
           <View>
             <AdminSatir

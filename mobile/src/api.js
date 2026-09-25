@@ -188,6 +188,8 @@ export const aidatOde = (id) =>
   istekYolla(`/api/aidatlar/${id}/ode`, { method: "POST" });
 export const aidatBenimOde = () =>
   istekYolla("/api/aidatlar/benim/ode", { method: "POST" });
+export const aidatHatirlat = (veri) =>
+  istekYolla("/api/aidatlar/hatirlat", { method: "POST", body: JSON.stringify(veri || {}) });
 
 // Bağışlar
 export const bagislar = () => istekYolla("/api/bagislar");

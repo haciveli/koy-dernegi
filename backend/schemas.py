@@ -274,6 +274,11 @@ class AidatResponse(BaseModel):
         from_attributes = True
 
 
+class AidatHatirlatInput(BaseModel):
+    yil: Optional[int] = None
+    ay: Optional[int] = None
+
+
 class BagisCreate(BaseModel):
     tutar: int
     ad: str

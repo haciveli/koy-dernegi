@@ -1139,6 +1139,50 @@ def aidat_benim_ode(
     return aidat_yanit(kayit)
 
 
+@app.post("/api/aidatlar/hatirlat")
+def aidat_hatirlat(
+    veri: schemas.AidatHatirlatInput,
+    _: models.Kullanici = Depends(guncel_yonetici),
+    db: Session = Depends(get_db),
+):
+    bugun = date.today()
+    yil = veri.yil or bugun.year
+    ay = veri.ay or bugun.month
+    if not (1 <= ay <= 12):
+        raise HTTPException(status_code=400, detail="Geçersiz ay")
+    odenenler = {
+        k[0]
+        for k in db.query(models.Aidat.kullanici_id)
+        .filter(models.Aidat.yil == yil, models.Aidat.ay == ay, models.Aidat.durum == "odendi")
+        .all()
+        if k[0] is not None
+    }
+    hedefler = (
+        db.query(models.Kullanici.id)
+        .filter(models.Kullanici.durum == "onayli")
+        .all()
+    )
+    hedef_ids = [k[0] for k in hedefler if k[0] not in odenenler]
+    if not hedef_ids:
+        return {"mesaj": "Bildirim gönderilecek üye bulunamadı", "hedef_sayi": 0}
+
+    kapali = _tercih_kapali_kullanicilar(db, "aidat")
+    sorgu = db.query(models.Cihaz.expo_token).filter(models.Cihaz.kullanici_id.in_(hedef_ids))
+    if kapali:
+        sorgu = sorgu.filter(models.Cihaz.kullanici_id.notin_(kapali))
+    tokenler = [t[0] for t in sorgu.all() if t[0]]
+    ay_isimleri = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                   "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+    ay_ad = ay_isimleri[ay]
+    _expo_push_gonder(
+        tokenler,
+        f"Aidat Hatırlatması",
+        f"{ay_ad} {yil} ayı aidatınızı ödemeniz bekleniyor. Odeme bildirimini yapmayı unutmayın.",
+        {"ekran": "Aidatlar"},
+    )
+    return {"mesaj": "Bildirim gönderildi", "hedef_sayi": len(hedef_ids), "gonderilen": len(tokenler)}
+
+
 @app.post("/api/aidatlar/{aidat_id}/ode", response_model=schemas.AidatResponse)
 def aidat_ode(
     aidat_id: int,
