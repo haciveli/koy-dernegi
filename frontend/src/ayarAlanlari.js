@@ -92,6 +92,7 @@ export const ayarGruplari = [
   {
     baslik: "Aidat & Bağış",
     alanlar: [
+      { anahtar: "aidat_aylik_tutar", etiket: "Aylık Aidat (₺)", tip: "metin" },
       { anahtar: "aidat_yillik_tutar", etiket: "Yıllık Aidat (₺)", tip: "metin" },
       { anahtar: "aidat_banka", etiket: "Aidat - Banka", tip: "metin" },
       { anahtar: "aidat_iban", etiket: "Aidat - IBAN", tip: "metin" },

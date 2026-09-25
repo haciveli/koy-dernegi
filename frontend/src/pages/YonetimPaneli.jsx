@@ -5,6 +5,23 @@ import { ayarGruplari, listeAlanlari } from "../ayarAlanlari"
 
 const girdi = "w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-4 focus:ring-koy-500/15 focus:border-koy-500"
 
+const AY_ADLARI = [
+  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+]
+const ayAdi = (ay) => {
+  const n = Number(ay)
+  if (!n || n < 1 || n > 12) return ""
+  return AY_ADLARI[n - 1]
+}
+const donemMetni = (a) => (Number(a.ay) === 0 ? `Tüm Yıl ${a.yil}` : `${ayAdi(a.ay)} ${a.yil}`)
+const DURUM_ETIKET = {
+  beklemede: { metin: "Bekliyor" },
+  odeyenekadar: { metin: "Ödeme Bildirildi" },
+  odendi: { metin: "Ödendi" },
+  reddedildi: { metin: "Reddedildi" },
+}
+
 const TOKEN_ANAHTARI = "koy_dernegi_admin_token"
 
 const tokenOku = () => localStorage.getItem(TOKEN_ANAHTARI)
@@ -75,8 +92,11 @@ export default function YonetimPaneli() {
   const [toplantiDuzenleme, setToplantiDuzenleme] = useState(null)
   const [toplantiKaydediliyor, setToplantiKaydediliyor] = useState(false)
   const [oylemeSecenek, setOylamaSecenek] = useState({ konu: "", secenekler: "" })
-  const [aidatForm, setAidatForm] = useState({ kullanici_id: "", yil: String(new Date().getFullYear()), tutar: "", aciklama: "" })
+  const [aidatForm, setAidatForm] = useState({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(new Date().getMonth() + 1), tutar: "", aciklama: "" })
   const [aidatEklemeYukleniyor, setAidatEklemeYukleniyor] = useState(false)
+  const [hatirlatmaAcik, setHatirlatmaAcik] = useState(false)
+  const [hatirlatmaForm, setHatirlatmaForm] = useState({ yil: String(new Date().getFullYear()), ay: "0" })
+  const [hatirlatmaYukleniyor, setHatirlatmaYukleniyor] = useState(false)
   const { yenile: ayarlariYenile } = useAyarlar()
   const [sifreForm, setSifreForm] = useState({ mevcut: "", yeni: "" })
   const [sifreDegistiriliyor, setSifreDegistiriliyor] = useState(false)
@@ -163,6 +183,38 @@ export default function YonetimPaneli() {
       return true
     }
     return false
+  }
+
+  const hatirlatGonder = async (e) => {
+    e.preventDefault()
+    const yil = Number(hatirlatmaForm.yil)
+    const ay = Number(hatirlatmaForm.ay ?? 0)
+    if (!yil || yil < 2000 || yil > 2100) {
+      mesajVer("Geçerli bir yıl girin", "hata")
+      return
+    }
+    if (ay < 0 || ay > 12) {
+      mesajVer("Dönem seçin", "hata")
+      return
+    }
+    setHatirlatmaYukleniyor(true)
+    try {
+      const sonuc = await api("/api/aidatlar/hatirlat", {
+        method: "POST",
+        body: JSON.stringify({ yil, ay }),
+      })
+      setHatirlatmaAcik(false)
+      mesajVer(
+        sonuc?.gonderilen > 0
+          ? `${sonuc.hedef_sayi} üye hedeflendi, ${sonuc.gonderilen} cihaza bildirim iletildi.`
+          : sonuc?.mesaj || "Bildirim gönderilecek üye bulunamadı."
+      )
+    } catch (err) {
+      if (yetkiHatasi(err)) return
+      mesajVer(err.message, "hata")
+    } finally {
+      setHatirlatmaYukleniyor(false)
+    }
   }
 
   const rehberKaydet = async (e) => {
@@ -1003,12 +1055,51 @@ export default function YonetimPaneli() {
 
         {sekme === "aidat" && (
           <div className="space-y-6">
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-2xl font-display font-bold">Aidat Yönetimi</h1>
+              <button
+                onClick={() => setHatirlatmaAcik((o) => !o)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-koy-600 text-white text-sm font-semibold hover:bg-koy-700"
+              >
+                <Megaphone size={16} /> Aidat Bildirimi Gönder
+              </button>
+            </div>
+
+            {hatirlatmaAcik && (
+              <div className="card p-6">
+                <h2 className="text-lg font-display font-semibold mb-1">Aidat Bildirimi Gönder</h2>
+                <p className="text-sm text-stone-500 mb-4">Seçtiğiniz dönem aidatını ödememiş üyelere hatırlatma gönderin.</p>
+                <form onSubmit={hatirlatGonder} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">Yıl</label>
+                    <input type="number" required min="2000" max="2100" value={hatirlatmaForm.yil} onChange={(e) => setHatirlatmaForm((f) => ({ ...f, yil: e.target.value }))} className={girdi} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">Dönem</label>
+                    <select value={hatirlatmaForm.ay} onChange={(e) => setHatirlatmaForm((f) => ({ ...f, ay: e.target.value }))} className={girdi}>
+                      <option value="0">Tüm Yıl</option>
+                      {AY_ADLARI.map((ad, i) => (
+                        <option key={i + 1} value={i + 1}>{ad}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={hatirlatmaYukleniyor}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-koy-600 text-white text-sm font-semibold hover:bg-koy-700 disabled:opacity-60"
+                  >
+                    <Megaphone size={16} /> {hatirlatmaYukleniyor ? "Gönderiliyor..." : "Gönder"}
+                  </button>
+                </form>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="card p-6 h-fit">
                 <h2 className="text-lg font-display font-semibold mb-1 flex items-center gap-2">
                   <CreditCard size={18} className="text-koy-600" /> Yeni Aidat Ekle
                 </h2>
-                <p className="text-sm text-stone-500 mb-4">Bir üye için yıllık aidat kaydı oluşturun.</p>
+                <p className="text-sm text-stone-500 mb-4">Bir üyeye aylık veya yıllık ("Tüm Yıl") aidat kaydı oluşturun.</p>
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault()
@@ -1019,12 +1110,13 @@ export default function YonetimPaneli() {
                         body: JSON.stringify({
                           kullanici_id: Number(aidatForm.kullanici_id),
                           yil: Number(aidatForm.yil) || new Date().getFullYear(),
-                          tutar: Number(aidatForm.tutar) || Number(ayarlar.aidat_yillik_tutar || 0),
+                          ay: Number(aidatForm.ay ?? 0),
+                          tutar: Number(aidatForm.tutar) || Number(Number(aidatForm.ay) === 0 ? (ayarlar.aidat_yillik_tutar || 0) : (ayarlar.aidat_aylik_tutar || 0)),
                           aciklama: aidatForm.aciklama,
                         }),
                       })
                       mesajVer("Aidat kaydı oluşturuldu!")
-                      setAidatForm({ kullanici_id: "", yil: String(new Date().getFullYear()), tutar: "", aciklama: "" })
+                      setAidatForm({ kullanici_id: "", yil: String(new Date().getFullYear()), ay: String(new Date().getMonth() + 1), tutar: "", aciklama: "" })
                       verileriYukle()
                     } catch (err) {
                       mesajVer(err.message, "hata")
@@ -1053,9 +1145,18 @@ export default function YonetimPaneli() {
                       <input type="number" required value={aidatForm.yil} onChange={(e) => setAidatForm((f) => ({ ...f, yil: e.target.value }))} className={girdi} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-1">Tutar (₺)</label>
-                      <input type="number" value={aidatForm.tutar} placeholder={ayarlar.aidat_yillik_tutar || "500"} onChange={(e) => setAidatForm((f) => ({ ...f, tutar: e.target.value }))} className={girdi} />
+                      <label className="block text-sm font-medium text-stone-700 mb-1">Dönem (Ay)</label>
+                      <select value={aidatForm.ay} onChange={(e) => setAidatForm((f) => ({ ...f, ay: e.target.value }))} className={girdi}>
+                        <option value="0">Tüm Yıl (Yıllık Aidat)</option>
+                        {AY_ADLARI.map((ad, i) => (
+                          <option key={i + 1} value={i + 1}>{ad}</option>
+                        ))}
+                      </select>
                     </div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-stone-700 mb-1">Tutar (₺)</label>
+                    <input type="number" value={aidatForm.tutar} placeholder={Number(aidatForm.ay) === 0 ? (ayarlar.aidat_yillik_tutar || "6000") : (ayarlar.aidat_aylik_tutar || "500")} onChange={(e) => setAidatForm((f) => ({ ...f, tutar: e.target.value }))} className={girdi} />
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-stone-700 mb-1">Açıklama (opsiyonel)</label>
@@ -1080,7 +1181,7 @@ export default function YonetimPaneli() {
                     <div key={a.id} className="flex items-center justify-between gap-3 bg-stone-50 rounded-xl px-4 py-3">
                       <div>
                         <p className="text-sm font-semibold">{a.ad} {a.soyad}</p>
-                        <p className="text-xs text-stone-500">{a.yil} · {a.tutar} ₺ · {a.durum === "odeyenekadar" ? "Ödeme bildirildi" : "Bekliyor"}</p>
+                        <p className="text-xs text-stone-500">{donemMetni(a)} · {a.tutar} ₺ · {DURUM_ETIKET[a.durum]?.metin ?? a.durum}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -1126,7 +1227,7 @@ export default function YonetimPaneli() {
                   <thead>
                     <tr className="bg-stone-50 text-left text-stone-500">
                       <th className="px-6 py-3 font-medium">Üye</th>
-                      <th className="px-6 py-3 font-medium">Yıl</th>
+                      <th className="px-6 py-3 font-medium">Dönem</th>
                       <th className="px-6 py-3 font-medium">Tutar</th>
                       <th className="px-6 py-3 font-medium">Durum</th>
                       <th className="px-6 py-3"></th>
@@ -1136,7 +1237,7 @@ export default function YonetimPaneli() {
                     {aidatlar.map((a) => (
                       <tr key={a.id} className="border-t border-stone-100 hover:bg-stone-50">
                         <td className="px-6 py-3 font-medium">{a.ad} {a.soyad}</td>
-                        <td className="px-6 py-3">{a.yil}</td>
+                        <td className="px-6 py-3">{donemMetni(a)}</td>
                         <td className="px-6 py-3">{a.tutar} ₺</td>
                         <td className="px-6 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
