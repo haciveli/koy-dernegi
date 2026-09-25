@@ -1051,6 +1051,14 @@ def aidat_ekle(
     db.add(aidat)
     db.commit()
     db.refresh(aidat)
+    bildirim_gonder(
+        db,
+        "Aidat Kaydı Oluşturuldu",
+        f"{veri.yil} yılı aidatınız kaydedildi ({aidat.tutar} ₺). Ödemenizi yaptığınızda bildirin.",
+        kullanici_id=veri.kullanici_id,
+        veri={"ekran": "Aidatlar"},
+        tur="aidat",
+    )
     return aidat_yanit(aidat)
 
 

@@ -82,6 +82,11 @@ export default function Aidat({ navigation }) {
   const buYil = typeof new Date().getFullYear === "function" ? new Date().getFullYear() : 2026;
   const buYilKaydi = (aidatListe || []).find((a) => a.yil == buYil);
 
+  const borcToplami = (aidatListe || []).reduce((top, a) => {
+    if (a.durum === "odendi") return top;
+    return top + odenecekTutar(a);
+  }, 0);
+
   const odemeBildir = (aidat) => {
     const tutar = odenecekTutar(aidat);
     Alert.alert(
@@ -166,6 +171,14 @@ export default function Aidat({ navigation }) {
       <ScrollView contentContainerStyle={styles.icerik}>
         {sekme === "aidat" ? (
           <>
+            {borcToplami > 0 ? (
+              <View style={styles.borcKart}>
+                <Text style={styles.borcMetin}>Toplam Aidat Borcunuz</Text>
+                <Text style={styles.borcTutar}>{borcToplami} ₺</Text>
+                <Text style={styles.borcNot}>Ödenmemiş aidat kayıtlarınızın toplamı. Ödeme yaptığınızda "Ödeme Bildirimi" yaparak yönetici onayından sonra ödenmiş sayılır.</Text>
+              </View>
+            ) : null}
+
             {(ayar?.aidat_iban || ayar?.aidat_banka) ? (
               <View style={styles.ibanKarti}>
                 <Text style={styles.ibanBaslik}>Aidat Hesabı</Text>
@@ -380,4 +393,15 @@ const styles = StyleSheet.create({
   yillikYil: { fontSize: 22, fontWeight: "800", color: renkler.ana_600 },
   yillikTutar: { fontSize: 15, fontWeight: "700", color: renkler.metin },
   yillikNot: { fontSize: 13, color: renkler.metin_soluk },
+  borcKart: {
+    backgroundColor: "#fff3f3",
+    borderRadius: olcutler.kart_radius,
+    borderWidth: 1,
+    borderColor: renkler.tehlikeli,
+    padding: 16,
+    gap: 6,
+  },
+  borcMetin: { fontSize: 13, fontWeight: "700", color: renkler.tehlikeli },
+  borcTutar: { fontSize: 30, fontWeight: "800", color: renkler.tehlikeli },
+  borcNot: { fontSize: 12, color: renkler.metin_soluk },
 });

@@ -1,8 +1,9 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { aidatlar, aidatGuncelle, aidatSil } from "../../api";
+import { aidatlar, aidatEkle, aidatGuncelle, aidatSil, kullanicilar } from "../../api";
 import AdminListe, { AdminSatir } from "../../components/admin/AdminListe";
+import YonetimForm from "../../components/admin/YonetimForm";
 import PageHeader from "../../components/PageHeader";
 import { renkler } from "../../theme";
 
@@ -13,16 +14,32 @@ const DURUM_ETIKET = {
   reddedildi: { metin: "Reddedildi", renk: renkler.tehlikeli },
 };
 
+const ALANLAR = [
+  { anahtar: "kullanici_id", etiket: "Üye", placeholder: "Üye seçin", secim: "uyeler" },
+  { anahtar: "yil", etiket: "Yıl", ikon: "calendar-outline", placeholder: "2024", keyboardType: "numeric", sayisal: true },
+  { anahtar: "tutar", etiket: "Tutar (₺)", ikon: "cash-outline", placeholder: "500", keyboardType: "numeric", sayisal: true },
+  { anahtar: "aciklama", etiket: "Açıklama (opsiyonel)", ikon: "document-text-outline", placeholder: "Örn. 2024 yılı aidatı", multiline: true },
+];
+
 export default function AidatYonetim() {
   const [yukleniyor, setYukleniyor] = useState(true);
+  const [yukleniyorForm, setYukleniyorForm] = useState(false);
+  const [formAcik, setFormAcik] = useState(false);
   const [veriler, setVeriler] = useState([]);
+  const [uyeler, setUyeler] = useState([]);
+  const [formDeger, setFormDeger] = useState({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
 
   const veriCek = useCallback(async () => {
     try {
-      const sonuc = await aidatlar();
-      setVeriler(Array.isArray(sonuc) ? sonuc : []);
+      const [aidatSonuc, uyeSonuc] = await Promise.all([
+        aidatlar().catch(() => []),
+        kullanicilar().catch(() => []),
+      ]);
+      setVeriler(Array.isArray(aidatSonuc) ? aidatSonuc : []);
+      setUyeler(Array.isArray(uyeSonuc) ? uyeSonuc : []);
     } catch {
       setVeriler([]);
+      setUyeler([]);
     } finally {
       setYukleniyor(false);
     }
@@ -33,6 +50,13 @@ export default function AidatYonetim() {
       veriCek();
     }, [veriCek])
   );
+
+  const uyeSecenekler = useMemo(
+    () => uyeler.map((u) => ({ deger: u.id, etiket: `${u.ad} ${u.soyad}`.trim() || `Üye #${u.id}` })),
+    [uyeler]
+  );
+
+  const formDegistir = (anahtar, deger) => setFormDeger((f) => ({ ...f, [anahtar]: deger }));
 
   const durumDegistir = (aidat, durum) => {
     Alert.alert(
@@ -73,14 +97,70 @@ export default function AidatYonetim() {
     ]);
   };
 
+  const kaydet = async () => {
+    if (!formDeger.kullanici_id) {
+      Alert.alert("Eksik Bilgi", "Üye seçin.");
+      return;
+    }
+    const yil = Number(formDeger.yil);
+    const tutar = Number(formDeger.tutar || 0);
+    if (!yil || yil < 2000 || yil > 2100) {
+      Alert.alert("Eksik Bilgi", "Geçerli bir yıl girin.");
+      return;
+    }
+    if (tutar < 0) {
+      Alert.alert("Eksik Bilgi", "Tutar 0'dan küçük olamaz.");
+      return;
+    }
+    setYukleniyorForm(true);
+    try {
+      await aidatEkle({
+        kullanici_id: Number(formDeger.kullanici_id),
+        yil,
+        tutar,
+        aciklama: formDeger.aciklama?.trim() || null,
+      });
+      setFormAcik(false);
+      setFormDeger({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
+      await veriCek();
+      Alert.alert("Kaydedildi", "Aidat kaydı eklendi.");
+    } catch (hata) {
+      Alert.alert("Hata", hata?.message || "Eklenemedi.");
+    } finally {
+      setYukleniyorForm(false);
+    }
+  };
+
+  if (formAcik) {
+    return (
+      <YonetimForm
+        baslik="Yeni Aidat"
+        altBaslik="Üyeye aidat kaydı ekleyin (geçmiş yıllar dahil)"
+        alanlar={ALANLAR}
+        formDeger={formDeger}
+        formDegistir={formDegistir}
+        secimSecenekler={{ uyeler: uyeSecenekler }}
+        onKaydet={kaydet}
+        yukleniyor={yukleniyorForm}
+        onVazgec={() => {
+          setFormAcik(false);
+          setFormDeger({ kullanici_id: "", yil: "", tutar: "", aciklama: "" });
+        }}
+        kaydetBaslik="Kaydet"
+      />
+    );
+  }
+
   return (
     <View style={styles.kap}>
-      <PageHeader baslik="Aidat Yönetimi" altBaslik="Ödeme bildirimlerini onaylayın" />
+      <PageHeader baslik="Aidat Yönetimi" altBaslik="Aidat ekleyin, ödemeleri onaylayın" />
       <AdminListe
         yukleniyor={yukleniyor}
         veriler={veriler}
         bosMetin="Henüz aidat kaydı yok"
         bosIkon="card-outline"
+        ekleBaslik="Yeni Aidat Ekle"
+        onEkle={() => setFormAcik(true)}
         renderSatir={(madde) => (
           <View>
             <AdminSatir

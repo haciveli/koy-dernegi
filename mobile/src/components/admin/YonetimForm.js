@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import {
   Alert,
   ActivityIndicator,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -69,7 +71,7 @@ function MedyaSec({ alan, deger, formDegistir }) {
 
 // Yönetim kayıt formlarının ortak iskeleti:
 // başlık + alan listesi + Kaydet/Vazgeç
-// alanlar: [{ anahtar, etiket, ikon, placeholder, multiline, keyboardType, sayisal, yan, dosya }]
+// alanlar: [{ anahtar, etiket, ikon, placeholder, multiline, keyboardType, sayisal, yan, dosya, secim }]
 export default function YonetimForm({
   baslik,
   altBaslik,
@@ -80,7 +82,14 @@ export default function YonetimForm({
   yukleniyor = false,
   onVazgec,
   kaydetBaslik = "Kaydet",
+  secimSecenekler = {},
 }) {
+  const [secimAcik, setSecimAcik] = useState(null);
+
+  const secimAlan = alanlar.find((a) => a.secim);
+  const secenekler = secimAlan ? (secimSecenekler[secimAlan.secim] ?? []) : [];
+  const seciliEtiket = secimAlan && secenekler.find((s) => String(s.deger) === String(formDeger?.[secimAlan.anahtar] ?? ""))?.etiket;
+
   return (
     <KeyboardAvoidingView
       style={styles.kap}
@@ -96,6 +105,27 @@ export default function YonetimForm({
           const deger = formDeger?.[alan.anahtar] ?? "";
           if (alan.dosya) {
             return <MedyaSec key={alan.anahtar} alan={alan} deger={deger} formDegistir={formDegistir} />;
+          }
+          if (alan.secim) {
+            const seceneklerBu = secimSecenekler[alan.secim] ?? [];
+            const secili = seceneklerBu.find((s) => String(s.deger) === String(formDeger?.[alan.anahtar] ?? ""));
+            return (
+              <View key={alan.anahtar} style={styles.secimKap}>
+                <Text style={styles.secimEtiket}>{alan.etiket}</Text>
+                <TouchableOpacity
+                  style={styles.secimButon}
+                  activeOpacity={0.8}
+                  onPress={() => setSecimAcik(alan.anahtar)}
+                >
+                  {secili ? (
+                    <Text style={styles.secimMetin}>{secili.etiket}</Text>
+                  ) : (
+                    <Text style={styles.secimYerTutucu}>{alan.placeholder ?? "Seçin..."}</Text>
+                  )}
+                  <Ionicons name="chevron-down" size={18} color={renkler.metin_soluk} />
+                </TouchableOpacity>
+              </View>
+            );
           }
           return (
             <FormInput
@@ -131,6 +161,37 @@ export default function YonetimForm({
           </View>
         </View>
       </ScrollView>
+
+      <Modal visible={!!secimAcik} transparent animationType="slide" onRequestClose={() => setSecimAcik(null)}>
+        <TouchableOpacity style={styles.modalSise} activeOpacity={1} onPress={() => setSecimAcik(null)}>
+          <View style={styles.modalKutu}>
+            <Text style={styles.modalBaslik}>{secimAlan?.etiket ?? "Seçim"}</Text>
+            <FlatList
+              data={secenekler}
+              keyExtractor={(s, i) => String(s.deger ?? i)}
+              renderItem={({ item }) => {
+                const seciliMi = String(item.deger) === String(formDeger?.[secimAlan?.anahtar] ?? "");
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalSatir, seciliMi && styles.modalSatirAktif]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      formDegistir(secimAlan.anahtar, String(item.deger));
+                      setSecimAcik(null);
+                    }}
+                  >
+                    <Text style={[styles.modalSatirMetin, seciliMi && styles.modalSatirMetinAktif]}>{item.etiket}</Text>
+                    {seciliMi ? <Ionicons name="checkmark" size={18} color={renkler.ana_600} /> : null}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+            <TouchableOpacity style={styles.modalKapat} onPress={() => setSecimAcik(null)}>
+              <Text style={styles.modalKapatMetin}>Vazgeç</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -156,4 +217,43 @@ const styles = StyleSheet.create({
   },
   medyaButonMetin: { color: renkler.ana_600, fontSize: 15, fontWeight: "600" },
   medyaYuklendi: { color: renkler.basarili, fontSize: 12 },
+  secimKap: { gap: 6, marginBottom: 14 },
+  secimEtiket: { fontSize: 13, fontWeight: "600", color: renkler.metin_soluk },
+  secimButon: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: renkler.kart,
+    borderWidth: 1,
+    borderColor: renkler.sinir,
+    borderRadius: olcutler.buton_radius,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+  },
+  secimMetin: { fontSize: 15, color: renkler.metin },
+  secimYerTutucu: { fontSize: 15, color: renkler.metin_soluk },
+  modalSise: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
+  modalKutu: {
+    backgroundColor: renkler.arkaplan,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 18,
+    paddingBottom: 28,
+    maxHeight: "70%",
+  },
+  modalBaslik: { fontSize: 17, fontWeight: "700", color: renkler.metin, paddingHorizontal: 20, marginBottom: 8 },
+  modalSatir: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: renkler.sinir,
+  },
+  modalSatirAktif: { backgroundColor: renkler.ana_50 },
+  modalSatirMetin: { fontSize: 15, color: renkler.metin },
+  modalSatirMetinAktif: { color: renkler.ana_600, fontWeight: "700" },
+  modalKapat: { marginTop: 6, alignItems: "center", paddingVertical: 14 },
+  modalKapatMetin: { color: renkler.tehlikeli, fontSize: 15, fontWeight: "700" },
 });
