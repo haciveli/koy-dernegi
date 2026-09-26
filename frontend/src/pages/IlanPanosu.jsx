@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { ScrollText, Phone, Clock } from "lucide-react"
+import { ScrollText, Phone, Clock, Tag, ShoppingCart, CheckCircle2, HelpCircle, LayoutGrid } from "lucide-react"
 import { useAyarlar } from "../AyarlarContext"
 import PageHeader from "../components/PageHeader"
 
@@ -24,12 +24,14 @@ export default function IlanPanosu() {
     new Date(t).toLocaleDateString("tr-TR", { day: "numeric", month: "long" })
 
   const ikonSec = (k) => {
-    if (k === "Satılık") return "pricetag-outline"
-    if (k === "Alınık") return "cart-outline"
-    if (k === "Bulundu") return "checkmark-circle-outline"
-    if (k === "Kayıp") return "help-circle-outline"
-    return "grid-outline"
+    if (k === "Satılık") return Tag
+    if (k === "Alınık") return ShoppingCart
+    if (k === "Bulundu") return CheckCircle2
+    if (k === "Kayıp") return HelpCircle
+    return LayoutGrid
   }
+
+  const KategoriIkon = ikonSec
 
   return (
     <div>
@@ -67,9 +69,7 @@ export default function IlanPanosu() {
                 <div className="flex items-start justify-between mb-3 gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-11 h-11 rounded-xl bg-koy-100 text-koy-700 flex items-center justify-center shrink-0">
-                      <span role="img" aria-label={i.kategori}>
-                        {ikonSec(i.kategori)}
-                      </span>
+                      <KategoriIkon size={20} />
                     </span>
                     <div className="min-w-0">
                       <h3 className="text-lg font-display font-semibold truncate">{i.baslik}</h3>
@@ -79,6 +79,9 @@ export default function IlanPanosu() {
                       </p>
                     </div>
                   </div>
+                  <span className="inline-flex items-center shrink-0 rounded-full bg-koy-100 text-koy-700 text-xs font-semibold px-3 py-1">
+                    {i.kategori}
+                  </span>
                   {i.fiyat > 0 ? (
                     <span className="text-lg font-bold text-koy-700 shrink-0">
                       {i.fiyat.toLocaleString("tr-TR")} ₺

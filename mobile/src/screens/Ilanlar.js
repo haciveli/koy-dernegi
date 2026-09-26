@@ -146,6 +146,9 @@ export default function Ilanlar() {
                   </Text>
                 ) : null}
               </View>
+              <View style={styles.kategoriRozet}>
+                <Text style={styles.kategoriRozetMetin}>{item.kategori}</Text>
+              </View>
               {item.fiyat > 0 ? <Text style={styles.fiyat}>{item.fiyat.toLocaleString("tr-TR")} ₺</Text> : null}
             </View>
             <Text style={styles.aciklama}>{item.aciklama}</Text>
@@ -237,6 +240,15 @@ const styles = StyleSheet.create({
   kartBaslikKap: { flex: 1, gap: 2 },
   baslik: { fontSize: 16, fontWeight: "700", color: renkler.metin },
   sahip: { fontSize: 12, color: renkler.metin_soluk },
+  kategoriRozet: {
+    backgroundColor: renkler.ana_100,
+    borderColor: renkler.ana_300,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  kategoriRozetMetin: { fontSize: 12, fontWeight: "700", color: renkler.ana_700 },
   fiyat: { fontSize: 16, fontWeight: "800", color: renkler.ana_700 },
   aciklama: { fontSize: 14, color: renkler.metin_soluk, lineHeight: 20 },
   arama: {
