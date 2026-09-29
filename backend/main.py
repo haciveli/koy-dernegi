@@ -1633,6 +1633,105 @@ def oy_kullan(
     return {"durum": "ok", "secim": secim, "oy_secimler": secimler, "oy_sayisi": sum(secimler.values())}
 
 
+# ---- Yapay zeka asistanı ----
+GEMINI_API_ANAHTARI = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+_asistan_son_soru = {}
+
+
+def _asistan_ayarlar(db: Session) -> dict:
+    kayitlar = {a.anahtar: a.deger for a in db.query(models.SiteAyar).all()}
+    return {**varsayilan_ayarlar.VARSAYILAN_AYARLAR, **kayitlar}
+
+
+def _asistan_bilgi_metni(ayarlar: dict) -> str:
+    return """Sen, bir köy derneği dijital üyelik uygulamasının resmi bilgi asistanısın.
+Aşağıda dernek hakkında bilgiler var; soruları YALNIZCA bu bilgilere dayanarak cevapla.
+Bilmediğin bir şey sorulursa uydurma; "Bu konuda bilgim yok, yönetimle iletişim bölümünden ulaşabilirsiniz." diye yönlendir.
+Kısa, samimi ve Türkçe cevap ver. Markdown kullanma, düz metin yaz.
+
+DERNEK BİLGİLERİ:
+- Ad: {site_adi}
+- Kısa açıklama: {site_kisa_aciklama}
+- Hakkında: {footer_metni}
+- İletişim adresi: {iletisim_adres}
+- Telefon: {iletisim_telefon}
+- E-posta: {iletisim_email}
+- Ofis saatleri: {ofis_saatleri}
+- Aylık aidat: {aidat_aylik_tutar} TL
+- Yıllık aidat: {aidat_yillik_tutar} TL
+- Aidat/bağış için IBAN: {aidat_iban}
+- Banka: {aidat_banka}
+- Alıcı adı: {aidat_alici}
+
+UYGULAMADA OLAN ÖZELLİKLER:
+- Üyelik başvurusu ve yönetici onayı, üye profili, köy bilgisi
+- Duyurular ve etkinlikler (katılım bildirimi)
+- Aidat ve bağış takibi (ödedim bildirimi, yönetici onayı)
+- Toplantılar, gündem ve online oylamalar
+- İlan panosu (satılık, alınık, kayıp, bulundu)
+- Köy rehberi, galeri ve videolar
+- Üyeler arası sohbet ve genel sohbet, push bildirimler
+- Yönetim paneli (web)""".format(**ayarlar).replace(" - ", " • ")
+
+
+def _gemini_yanit(sistem: str, metin: str) -> str:
+    if not GEMINI_API_ANAHTARI:
+        raise RuntimeError("GEMINI_API_KEY tanımlı değil")
+    adres = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}"
+        f":generateContent?key={GEMINI_API_ANAHTARI}"
+    )
+    govde = {
+        "systemInstruction": {"parts": [{"text": sistem}]},
+        "contents": [{"role": "user", "parts": [{"text": metin}]}],
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 700},
+    }
+    istek = url_istek.Request(
+        adres,
+        data=json.dumps(govde).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with url_istek.urlopen(istek, timeout=45) as yanit:
+        veri = json.loads(yanit.read().decode("utf-8"))
+    try:
+        parcalar = veri["candidates"][0]["content"]["parts"]
+        sonuc = "\n".join(p.get("text", "") for p in parcalar).strip()
+    except (KeyError, IndexError):
+        engel = veri.get("promptFeedback", {}).get("blockReason")
+        sonuc = "Soru işlenemedi." if not engel else "Bu soruya şu anda cevap verilemiyor."
+    return sonuc
+
+
+@app.post("/api/asistan/sor")
+def asistan_sor(
+    veri: dict,
+    kullanici: models.Kullanici = Depends(guncel_kullanici),
+    db: Session = Depends(get_db),
+):
+    mesaj = (veri.get("mesaj") or "").strip()
+    if not mesaj:
+        raise HTTPException(status_code=400, detail="Mesaj boş olamaz")
+    if len(mesaj) > 500:
+        raise HTTPException(status_code=400, detail="Mesaj çok uzun, kısaltın")
+    son = _asistan_son_soru.get(kullanici.id)
+    if son and time.time() - son < 3:
+        raise HTTPException(status_code=429, detail="Çok hızlı soruyorsunuz, birkaç saniye bekleyin")
+    _asistan_son_soru[kullanici.id] = time.time()
+
+    if not GEMINI_API_ANAHTARI:
+        return {"cevap": "Asistan henüz yönetici tarafından aktifleştirilmedi. Lütfen daha sonra tekrar deneyin."}
+
+    ayarlar = _asistan_ayarlar(db)
+    sistemi = _asistan_bilgi_metni(ayarlar)
+    icerik = f"Üye: {kullanici.ad} {kullanici.soyad}. Soru: {mesaj}"
+    try:
+        return {"cevap": _gemini_yanit(sistemi, icerik)}
+    except Exception:
+        return {"cevap": "Asistanla şu an bağlantı kurulamadı. Lütfen biraz sonra tekrar deneyin."}
+
+
 FRONTEND_KLASOR = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.isdir(FRONTEND_KLASOR):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_KLASOR, "assets")), name="assets")

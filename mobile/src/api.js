@@ -240,6 +240,13 @@ export const oylamaSil = (toplantiId, oylamaId) =>
 export const oyKullan = (toplantiId, oylamaId, secim) =>
   istekYolla(`/api/toplantilar/${toplantiId}/oylamalar/${oylamaId}/oy?secim=${encodeURIComponent(secim)}`, { method: "POST" });
 
+// ---- Yapay zeka asistanı ----
+export const asistanSor = (mesaj) =>
+  istekYolla("/api/asistan/sor", {
+    method: "POST",
+    body: JSON.stringify({ mesaj }),
+  });
+
 // ---- Bildirim cihazları ----
 export const cihazKaydet = (veri) =>
   istekYolla("/api/cihaz", { method: "POST", body: JSON.stringify(veri) });
