@@ -163,6 +163,21 @@ export default function AnaSayfa({ navigation }) {
         </View>
       </View>
     </ScrollView>
+
+    <View style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 999 }}>
+  <FloatingActionButton
+    onPress={() => {
+    const num = ayar?.whatsapp_numarasi?.replace(/\s+/g, '') || ''; if (num) {
+      const url = num.startsWith('whatsapp:') ? num : `https://wa.me/${num.replace(/[^0-9]/g, '')}?text=Koy%20Dernegi%20uygulamasindan%20soru%20sormak%20istegiyorum`;
+        Linking.openURL(url);
+      }
+    }
+    accessibilityLabel="WhatsApp ile iletisim"
+  >
+    <Ionicons name='whatsapp-outline' size={30} color={renkler.ana_600} />
+  </FloatingActionButton>
+</View>
+</ScrollView>
   );
 }
 

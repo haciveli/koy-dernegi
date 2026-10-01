@@ -25,7 +25,7 @@ const AYAR_ALANLARI = [
   { anahtar: "aidat_iban", etiket: "Aidat IBAN", ikon: "card-outline", placeholder: "TR00 0000 ...", yazim: "none" },
   { anahtar: "aidat_alici", etiket: "Aidat Alıcı", ikon: "person-outline", placeholder: "Dernek adı" },
   { anahtar: "aidat_aciklama", etiket: "Aidat Havale Notu", ikon: "document-text-outline", placeholder: "Açıklamaya adınızı yazınız", multiline: true },
-  { anahtar: "bagis_banka", etiket: "Bağış Bankası", ikon: "business-outline", placeholder: "Bankanız" },
+  { anahtar: "whatsapp_numarasi", etiket: "WhatsApp Numarası", ikon: "whatsapp-outline", placeholder: "+90 (___) ___ __ __", keyboardType: "phone-pad" },
   { anahtar: "bagis_iban", etiket: "Bağış IBAN", ikon: "card-outline", placeholder: "TR00 0000 ...", yazim: "none" },
   { anahtar: "bagis_alici", etiket: "Bağış Alıcı", ikon: "person-outline", placeholder: "Dernek adı" },
   { anahtar: "bagis_aciklama", etiket: "Bağış Açıklaması", ikon: "document-text-outline", placeholder: "Bağış notu", multiline: true },
