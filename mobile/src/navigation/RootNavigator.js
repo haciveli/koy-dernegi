@@ -12,7 +12,6 @@ import EtkinlikDetay from "../screens/EtkinlikDetay";
 import Galeri from "../screens/Galeri";
 import Videolar from "../screens/Videolar";
 import Sohbet from "../screens/Sohbet";
-import Asistan from "../screens/Asistan";
 import Kanal from "../screens/Kanal";
 import Iletisim from "../screens/Iletisim";
 import Profil from "../screens/Profil";
@@ -58,7 +57,6 @@ function SekmeYonlendirici() {
             EtkinlikTab: focused ? "calendar" : "calendar-outline",
             GaleriTab: focused ? "images" : "images-outline",
             SohbetTab: focused ? "chatbubbles" : "chatbubbles-outline",
-            AsistanTab: focused ? "sparkles" : "sparkles-outline",
             ProfilTab: focused ? "person" : "person-outline",
           };
           return <Ionicons name={ikonlar[route.name]} size={size} color={color} />;
@@ -70,7 +68,6 @@ function SekmeYonlendirici() {
       <Sekmeler.Screen name="EtkinlikTab" component={Etkinlikler} options={{ title: "Etkinlikler" }} />
       <Sekmeler.Screen name="GaleriTab" component={Galeri} options={{ title: "Galeri" }} />
       <Sekmeler.Screen name="SohbetTab" component={Sohbet} options={{ title: "Sohbet" }} />
-      <Sekmeler.Screen name="AsistanTab" component={Asistan} options={{ title: "Asistan" }} />
       <Sekmeler.Screen name="ProfilTab" component={Profil} options={{ title: "Profil" }} />
     </Sekmeler.Navigator>
   );
